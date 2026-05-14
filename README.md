@@ -8,24 +8,17 @@ Designed with a clean UI and modular architecture, the project demonstrates real
 
 ## 🚀 Features
 
-### 👤 User Side
-- Explore a variety of pizzas with images
-- View detailed pizza information
-- Customize pizzas (size, toppings, etc.)
-- Add items to cart
-- Update and manage cart
-- Order summary with GST calculation
-- User login system
-
-### 🧑‍💼 Admin Side
-- Admin dashboard
-- Inventory management
-- Order handling
-
-### ⚙️ General
-- Responsive UI design
-- Clean and modular code structure
-- REST API integration
+- 🏠 Landing page with modern UI
+- 🍕 Pizza listing with images
+- 🔍 Pizza details & customization
+- 🛒 Shopping cart system
+- 📦 Order placement & summary
+- 🧾 GST and total price calculation
+- 🔐 User authentication (Login system)
+- 🧑‍💼 Admin dashboard
+- 📊 Inventory management
+- 📁 Clean and modular folder structure
+- 📱 Responsive design
 
 ***
 
@@ -160,6 +153,7 @@ npm start
 
 **Trisha Patil**  
 GitHub: [github.com/trisha-patil05](https://github.com/trisha-patil05)
+linkedin: [linkedin.com/trisha-patil05](https://www.linkedin.com/in/trisha-patil05/)
 
 ***
 
