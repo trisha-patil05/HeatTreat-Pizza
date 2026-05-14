@@ -1,3 +1,8 @@
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Node](https://img.shields.io/badge/Backend-Node.js-green)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-brightgreen)
+![License](https://img.shields.io/badge/Status-Active-orange)
+
 # 🍕 HeatTreat Pizza
 
 HeatTreat Pizza is a full-stack web application that allows users to browse pizzas, customize their orders, manage a cart, and place orders seamlessly. It also includes an admin dashboard for managing inventory and orders.
