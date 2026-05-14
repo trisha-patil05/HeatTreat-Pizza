@@ -1,0 +1,52 @@
+/* Completely hide vertical scrollbars but allow scrolling */
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;         /* Enable scrolling */
+  -ms-overflow-style: none;     /* IE and Edge */
+  scrollbar-width: none; 
+  overflow-y: hidden;       /* Firefox */
+}
+
+body::-webkit-scrollbar,
+html::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari */
+}
+
+/* App layout base */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #000; /* Fallback background */
+}
+
+/* Main content container */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable content, scrollbar hidden */
+.page-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+
+  -ms-overflow-style: none;     /* IE and Edge */
+  scrollbar-width: none;
+  overflow: hidden;        /* Firefox */
+}
+
+.page-content::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari */
+}
+
+/* Login section with background image */
+.login-background {
+  background-image: url('/pizza_images/background2.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #000;
+}

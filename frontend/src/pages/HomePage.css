@@ -1,0 +1,249 @@
+:root {
+  --bg-black: #0e0e0e;
+  --card-black: #1a1a1a;
+  --border-dark: #2a2a2a;
+  --orange-main: #ff6600;
+  --orange-hover: #ff8533;
+  --orange-soft: #ffb066;
+  --text-white: #ffffff;
+  --text-muted: #bdbdbd;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: var(--bg-black);
+  color: var(--text-white);
+}
+
+.home-container {
+  padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background-color: var(--bg-black);
+}
+
+.homepage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: linear-gradient(90deg, #0f0f0f, #1a1a1a);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.heattreat-logo-text {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--orange-main);
+  margin: 0;
+}
+
+.search-and-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-input {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #333;
+  background-color: #111;
+  color: white;
+  font-size: 16px;
+}
+
+.cart-btn {
+  background-color: var(--orange-main);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cart-btn:hover {
+  background-color: var(--orange-hover);
+}
+
+.menu-container {
+  position: relative;
+}
+
+.account-icon {
+  font-size: 26px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--orange-main);
+}
+
+.dropdown-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 280px;
+  background-color: var(--card-black);
+  border-left: 1px solid var(--border-dark);
+  padding: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-header {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: var(--orange-main);
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-item {
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-white);
+  transition: background 0.3s;
+}
+
+.menu-item:hover {
+  background: var(--orange-main);
+  color: #000;
+}
+
+.menu-heading-section {
+  text-align: center;
+  margin: 30px 0 20px;
+}
+
+.menu-heading-section h2 {
+  color: var(--orange-main);
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.category-filters {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.category-filters button {
+  background: transparent;
+  border: 1px solid var(--orange-main);
+  color: var(--orange-main);
+  padding: 10px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.category-filters button:hover,
+.category-filters .active-filter {
+  background: var(--orange-main);
+  color: #000;
+}
+
+.pizza-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-top: 20px;
+}
+
+.pizza-card {
+  background: linear-gradient(180deg, #1a1a1a, #111111);
+  border: 1px solid var(--border-dark);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.pizza-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 12px rgba(255, 102, 0, 0.2);
+}
+
+.pizza-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.pizza-card h3 {
+  font-size: 1.25rem;
+  color: var(--text-white);
+  margin-bottom: 6px;
+}
+
+.pizza-card p {
+  color: var(--orange-main);
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.card-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.card-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--orange-main), #ff5200);
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.card-buttons button:hover {
+  background: linear-gradient(135deg, var(--orange-hover), var(--orange-main));
+  transform: scale(1.03);
+}
+
+@media (max-width: 992px) {
+  .pizza-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .homepage-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .search-and-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .pizza-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .pizza-list {
+    grid-template-columns: 1fr;
+  }
+}

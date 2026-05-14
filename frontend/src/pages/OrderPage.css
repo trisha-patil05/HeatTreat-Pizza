@@ -1,0 +1,89 @@
+.order-summary-container {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fffdf5;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.order-summary-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.order-card {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.order-card h4 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.order-card p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #444;
+}
+
+.total-row {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #ccc;
+  font-size: 18px;
+  color: #222;
+}
+
+.address-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.confirm-button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #ff7f50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirm-button:hover {
+  background-color: #e5673f;
+}
+
+.confirmation-message {
+  margin-top: 1rem;
+  padding: 10px;
+  background-color: #e6ffe6;
+  border: 1px solid #6cc070;
+  border-radius: 6px;
+  color: #e67e22;
+  font-weight: 500;
+  text-align: center;
+}
+
+.loading-text {
+  text-align: center;
+  padding: 2rem;
+  font-size: 18px;
+}
+
+.order-summary-container button {
+  margin-top: 10px;
+}

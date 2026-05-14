@@ -1,0 +1,174 @@
+.ourstory-container {
+  font-family: 'Poppins', sans-serif;
+  color: #fff;
+  background-color: #0f0f0f;
+}
+
+/* Hero Section */
+.hero-ourstory {
+  position: relative;
+  height: 60vh;
+  background-color: #1a1a1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero-ourstory .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15,15,15,0.6);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 1.2s ease forwards;
+}
+
+.hero-title {
+  font-size: 3rem;
+  color: #ff6600;
+  margin-bottom: 15px;
+  text-shadow: 0 0 15px rgba(255,102,0,0.8);
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+  margin-bottom: 25px;
+  color: #fff;
+}
+
+/* Story Sections */
+.story-section {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.story-section.alt {
+  background-color: #111;
+}
+
+.story-text h2 {
+  font-size: 2rem;
+  color: #ff6600;
+  margin-bottom: 15px;
+}
+
+.story-text p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #ddd;
+  max-width: 800px;
+  margin: auto;
+}
+
+/* Counters */
+.counters-section {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  padding: 50px 20px;
+  background-color: #111;
+  text-align: center;
+}
+
+.counter h3 {
+  font-size: 2.5rem;
+  color: #ff6600;
+  margin-bottom: 5px;
+}
+
+.counter p {
+  color: #ddd;
+  font-weight: 500;
+}
+
+/* Team Section */
+.team-section {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.team-section h2 {
+  font-size: 2rem;
+  color: #ff6600;
+  margin-bottom: 40px;
+}
+
+.team-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+}
+
+.team-card {
+  background-color: #222;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  width: 200px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(255,102,0,0.4);
+}
+
+.team-card h4 {
+  color: #ff6600;
+  margin-bottom: 5px;
+}
+
+.team-card p {
+  color: #ddd;
+  font-weight: 500;
+}
+
+/* CTA Section */
+.story-cta {
+  padding: 50px 20px;
+  text-align: center;
+  background-color: #111;
+}
+
+.story-cta h2 {
+  font-size: 2rem;
+  color: #ff6600;
+  margin-bottom: 20px;
+}
+
+.cta-button {
+  background-color: #ff6600;
+  padding: 12px 30px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s;
+  animation: pulse 2s infinite;
+}
+
+.cta-button:hover {
+  background-color: #ff8533;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Responsive */
+@media(max-width: 900px){
+  .team-grid { gap: 20px; flex-direction: column; }
+}

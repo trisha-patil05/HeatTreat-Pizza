@@ -1,0 +1,26 @@
+.admin-dashboard {
+  padding: 2rem;
+  max-width: 500px;
+  margin: auto;
+  background: #f9f9f9;
+  border-radius: 10px;
+}
+
+.inventory-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+}
+
+.inventory-item label {
+  font-weight: bold;
+}
+
+.update-btn {
+  padding: 10px 20px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
