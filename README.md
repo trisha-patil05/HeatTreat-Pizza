@@ -152,8 +152,8 @@ npm start
 ## 👩‍💻 Author
 
 **Trisha Patil**  
-GitHub: [github.com/trisha-patil05](https://github.com/trisha-patil05)
-linkedin: [linkedin.com/trisha-patil05](https://www.linkedin.com/in/trisha-patil05/)
+-GitHub: [github.com/trisha-patil05](https://github.com/trisha-patil05)
+-linkedin: [linkedin.com/trisha-patil05](https://www.linkedin.com/in/trisha-patil05/)
 
 ***
 
