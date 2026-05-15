@@ -126,11 +126,7 @@ npm start
 ## 📸 Screenshots
 
 > Add screenshots here (recommended):
-> - Home Page
-> - Pizza Details
-> - Cart Page
-> - Order Summary
-> - Admin Dashboard
+
 
 ***
 
