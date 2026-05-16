@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./LandingPage.css";
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState("");
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [toast, setToast] = useState("");
 
   const popularPizzas = [
     { name: "Cheese Burst", price: "₹299", img: "/pizzas/29.jpg", mood: "cheesy" },
@@ -24,32 +26,57 @@ export default function LandingPage() {
       ? popularPizzas
       : popularPizzas.filter((pizza) => pizza.mood === selectedMood);
 
+  // Scroll animation
+  const observerRef = useRef(null);
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    document.querySelectorAll(".animate-section").forEach((el) => {
+      observerRef.current.observe(el);
+    });
+
+    return () => observerRef.current?.disconnect();
+  }, []);
+
+  // Toast helper
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  };
+
+  const handleNewsletter = (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setSubscribed(true);
+    showToast("🎉 Subscribed successfully!");
+    setEmail("");
+  };
+
   return (
     <div className="landing-container">
-      <header className="header">
-        <h1 className="logo">HeatTreat Pizza</h1>
-        <nav className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/story">Our Story</Link>
-          <Link to="/contact">Contact</Link>
-          <button onClick={() => navigate("/login")} className="login-btn">
-            Login
-          </button>
-        </nav>
-      </header>
 
+      {/* Toast */}
+      {toast && <div className="toast">{toast}</div>}
+
+      {/* Hero */}
       <section
         className="hero"
-        style={{
-          backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)`,
-        }}
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)` }}
       >
-        <div className="hero-content">
+        <div className="hero-content animate-hero">
           <h2 className="hero-title">Hot. Fresh. Loaded.</h2>
           <p className="hero-subtitle">
             Build your perfect pizza and get it delivered hot from HeatTreat.
           </p>
-
           <div className="search-box">
             <select>
               <option>Select City</option>
@@ -62,55 +89,37 @@ export default function LandingPage() {
               <option>Main Branch</option>
               <option>Central Mall</option>
             </select>
-            <button
-              className="find-food-btn"
-              onClick={() => navigate("/home")}
-            >
+            <button className="find-food-btn" onClick={() => navigate("/home")}>
               Explore Menu
             </button>
           </div>
         </div>
       </section>
 
-      <section className="features">
+      {/* Features */}
+      <section className="features animate-section">
         <h3>From Oven to Your Door</h3>
         <div className="feature-grid">
-          <div className="feature-card">
-            <span>📍</span>
-            <h4>Select Location</h4>
-            <p>Choose your city and nearest HeatTreat outlet.</p>
-          </div>
-          <div className="feature-card">
-            <span>🍕</span>
-            <h4>Choose Your Pizza</h4>
-            <p>Pick from classic, spicy, or chef’s special pizzas.</p>
-          </div>
-          <div className="feature-card">
-            <span>🧀</span>
-            <h4>Customize Toppings</h4>
-            <p>Add cheese, veggies, sauces and make it perfect.</p>
-          </div>
-          <div className="feature-card">
-            <span>💳</span>
-            <h4>Pay Securely</h4>
-            <p>Fast and safe payment with all digital methods.</p>
-          </div>
-          <div className="feature-card">
-            <span>🔥</span>
-            <h4>Freshly Baked</h4>
-            <p>Your pizza is prepared hot and fresh by our chefs.</p>
-          </div>
-          <div className="feature-card">
-            <span>🛵</span>
-            <h4>Delivered Fast</h4>
-            <p>Cheesy, hot and delicious at your doorstep.</p>
-          </div>
+          {[
+            { icon: "📍", title: "Select Location", desc: "Choose your city and nearest HeatTreat outlet." },
+            { icon: "🍕", title: "Choose Your Pizza", desc: "Pick from classic, spicy, or chef's special pizzas." },
+            { icon: "🧀", title: "Customize Toppings", desc: "Add cheese, veggies, sauces and make it perfect." },
+            { icon: "💳", title: "Pay Securely", desc: "Fast and safe payment with all digital methods." },
+            { icon: "🔥", title: "Freshly Baked", desc: "Your pizza is prepared hot and fresh by our chefs." },
+            { icon: "🛵", title: "Delivered Fast", desc: "Cheesy, hot and delicious at your doorstep." },
+          ].map((f, i) => (
+            <div className="feature-card" key={i}>
+              <span>{f.icon}</span>
+              <h4>{f.title}</h4>
+              <p>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="popular-mood" id="menu">
+      {/* Mood Picker */}
+      <section className="popular-mood animate-section" id="menu">
         <h3>Choose Your Craving 😋</h3>
-
         <div className="mood-buttons">
           {["cheesy", "spicy", "tangy", "garlicy"].map((mood) => (
             <button
@@ -118,25 +127,16 @@ export default function LandingPage() {
               onClick={() => setSelectedMood(mood)}
               className={selectedMood === mood ? "active" : ""}
             >
-              {mood === "cheesy"
-                ? "🧀 Cheesy"
-                : mood === "spicy"
-                ? "🌶 Spicy"
-                : mood === "tangy"
-                ? "🍅 Tangy"
-                : "🧄 Garlicy"}
+              {mood === "cheesy" ? "🧀 Cheesy" : mood === "spicy" ? "🌶 Spicy" : mood === "tangy" ? "🍅 Tangy" : "🧄 Garlicy"}
             </button>
           ))}
-          <button
-            onClick={() => setSelectedMood("")}
-            className={selectedMood === "" ? "active" : ""}
-          >
+          <button onClick={() => setSelectedMood("")} className={selectedMood === "" ? "active" : ""}>
             Show All
           </button>
         </div>
 
         <div className="featured-banner">
-          <h4>Chef’s Pick</h4>
+          <h4>Chef's Pick</h4>
           <p>Try our signature Paneer Tandoori with smoky sauce and extra cheese.</p>
         </div>
 
@@ -145,22 +145,14 @@ export default function LandingPage() {
             <div
               key={i}
               className={`pizza-card ${i === 0 ? "featured-card" : ""}`}
-              onClick={() =>
-                navigate("/home", {
-                  state: { pizza },
-                })
-              }
+              onClick={() => navigate("/home", { state: { pizza } })}
             >
               <img src={pizza.img} alt={pizza.name} />
               <h4>{pizza.name}</h4>
               <p>{pizza.price}</p>
-
               <button
                 className="order-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate("/login", { state: { pizza } });
-                }}
+                onClick={(e) => { e.stopPropagation(); navigate("/login", { state: { pizza } }); }}
               >
                 Order Now
               </button>
@@ -169,7 +161,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="testimonials">
+      {/* Testimonials */}
+      <section className="testimonials animate-section">
         <h3>Loved by Pizza Fans</h3>
         <div className="review-grid">
           {testimonials.map((review, i) => (
@@ -181,16 +174,36 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Newsletter */}
+      <section className="newsletter-section animate-section">
+        <div className="newsletter-box">
+          <h3>🍕 Get Exclusive Deals!</h3>
+          <p>Subscribe to our newsletter and get 10% off your first order.</p>
+          {subscribed ? (
+            <p className="subscribed-msg">✅ You're subscribed! Check your inbox soon.</p>
+          ) : (
+            <form className="newsletter-form" onSubmit={handleNewsletter}>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <button type="submit">Subscribe</button>
+            </form>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
       <footer className="footer">
         <div className="footer-container">
           <div className="footer-sections">
             <div className="footer-section">
               <h4>About Us</h4>
-              <ul>
-                <li><Link to="/story">Our Story</Link></li>
-              </ul>
+              <ul><li><Link to="/story">Our Story</Link></li></ul>
             </div>
-
             <div className="footer-section">
               <h4>Contact</h4>
               <ul>
@@ -199,26 +212,13 @@ export default function LandingPage() {
                 <li><Link to="/contact">Contact Form</Link></li>
               </ul>
             </div>
-
             <div className="footer-section">
               <h4>Delivery Locations</h4>
               <ul>
-                <li>Surat</li>
-                <li>Ahmedabad</li>
-                <li>Indore</li>
-                <li>Mumbai</li>
+                <li>Surat</li><li>Ahmedabad</li><li>Indore</li><li>Mumbai</li>
               </ul>
             </div>
           </div>
-
-          <div className="footer-apps">
-            <p>Get the app:</p>
-            <div className="app-badges">
-              <a href="#"><img src={`${process.env.PUBLIC_URL}/apps/google-play-badge.png`} alt="Google Play" /></a>
-              <a href="#"><img src={`${process.env.PUBLIC_URL}/apps/app-store-badge.png`} alt="App Store" /></a>
-            </div>
-          </div>
-
           <div className="footer-bottom">
             <p>© 2025 HeatTreat Pizza | Made with ❤️ & 🍕</p>
           </div>

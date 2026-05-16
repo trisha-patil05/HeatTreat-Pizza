@@ -1,68 +1,55 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
+  const { login, register } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
- const handleSubmit = async () => {
-  try {
+  const handleSubmit = async () => {
+    setError("");
+
     if (!username || !password || (!isLogin && !email)) {
-      alert("Please fill all fields");
+      setError("Please fill all fields");
       return;
     }
 
-    const url = isLogin
-      ? "http://localhost:5000/api/auth/login"
-      : "http://localhost:5000/api/auth/register";
-
-    const bodyData = isLogin
-      ? { username, password }
-      : { username, email, password };
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(bodyData)
-    });
-
-    const text = await res.text();
-    console.log("Raw response:", text);
-
-    let data = {};
     try {
-      data = JSON.parse(text);
-    } catch (e) {
-      throw new Error("Backend did not return valid JSON");
-    }
-
-    if (res.ok) {
-      alert(data.message);
-
       if (isLogin) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        await login(username, password);
         navigate("/home");
       } else {
-        setUsername("");
-        setEmail("");
-        setPassword("");
-        setIsLogin(true);
+        // Register via direct fetch (AuthContext ka register alag hai)
+        const res = await fetch("http://localhost:5000/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setUsername("");
+          setEmail("");
+          setPassword("");
+          setIsLogin(true);
+          setError("✅ Registered! Ab login karo.");
+        } else {
+          setError(data.message || "Registration failed");
+        }
       }
-    } else {
-      alert(data.message || "Something went wrong");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong");
     }
-  } catch (error) {
-    console.error("Frontend error:", error);
-    alert(error.message || "Server error");
-  }
-};
+  };
 
   return (
     <div
@@ -98,18 +85,19 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
+          {error && (
+            <p style={{ color: error.startsWith("✅") ? "green" : "red", textAlign: "center", marginTop: "8px" }}>
+              {error}
+            </p>
+          )}
+
           <button onClick={handleSubmit}>
             {isLogin ? "Login" : "Register"}
           </button>
 
           <p className="toggle-form">
-            <span
-              className="toggle-link"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin
-                ? "New user? Register here"
-                : "Already registered? Login"}
+            <span className="toggle-link" onClick={() => { setIsLogin(!isLogin); setError(""); }}>
+              {isLogin ? "New user? Register here" : "Already registered? Login"}
             </span>
           </p>
         </div>

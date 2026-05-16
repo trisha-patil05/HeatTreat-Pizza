@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 
-mongoose.connect("mongodb://127.0.0.1:27017/pizzaapp")
+mongoose.connect("mongodb+srv://Trisha05:Eskt5105@cluster1.edjmjaq.mongodb.net/HeatTreatPizzaDB")
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log("MongoDB Error:", err));
 

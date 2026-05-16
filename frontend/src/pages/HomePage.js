@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BannerCarousel from '../components/BannerCarousel';
-import './HomePage.css';
+import { useCart } from '../context/CartContext';
 
 const pizzas = [
   { id: 1, name: 'Margherita', price: 200, category: 'Veg', image: '/pizzas/1.jpeg' },
@@ -36,94 +36,63 @@ const pizzas = [
 
 function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [cartItemCount, setCartItemCount] = useState(0);
+  const [sortOrder, setSortOrder] = useState('default');
+  const [toast, setToast] = useState('');
+  const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const closeMenu = () => setIsAccountMenuOpen(false);
-    document.addEventListener("click", closeMenu);
-    return () => document.removeEventListener("click", closeMenu);
-  }, []);
-
-  useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem('cartItems')) || [];
-    setCartItemCount(storedCart.reduce((acc, item) => acc + item.quantity, 0));
-  }, []);
-
-  const addToCart = (pizza) => {
-    const existingCart = JSON.parse(localStorage.getItem('cartItems')) || [];
-    const found = existingCart.find(item => item.id === pizza.id);
-
-    if (found) {
-      found.quantity += 1;
-    } else {
-      existingCart.push({ ...pizza, quantity: 1 });
-    }
-
-    localStorage.setItem('cartItems', JSON.stringify(existingCart));
-    setCartItemCount(existingCart.reduce((acc, item) => acc + item.quantity, 0));
-    alert(`${pizza.name} added to cart!`);
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
   };
 
-  const filteredPizzas = pizzas.filter(
+  const handleAddToCart = (pizza) => {
+    addToCart(pizza);
+    showToast(`🍕 ${pizza.name} added to cart!`);
+  };
+
+  let filteredPizzas = pizzas.filter(
     pizza =>
       pizza.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (selectedCategory === 'All' || pizza.category.toLowerCase().includes(selectedCategory.toLowerCase()))
   );
 
+  if (sortOrder === 'low') filteredPizzas = [...filteredPizzas].sort((a, b) => a.price - b.price);
+  if (sortOrder === 'high') filteredPizzas = [...filteredPizzas].sort((a, b) => b.price - a.price);
+
   return (
     <div className="home-container">
-      <header className="homepage-header">
-        <div className="header-left">
-          <h1 className="heattreat-logo-text">HeatTreat Pizza</h1>
-        </div>
 
-        <div className="search-and-menu">
-          <input
-            type="text"
-            placeholder="Search pizza..."
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-
-          <button className="cart-btn" onClick={() => navigate("/cart")}>
-            🛒 Cart ({cartItemCount})
-          </button>
-
-          <div className="menu-container">
-            <span
-              className="account-icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsAccountMenuOpen(prev => !prev);
-              }}
-            >
-              ☰
-            </span>
-
-            {isAccountMenuOpen && (
-              <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
-                <div className="menu-header">My Account</div>
-                <div className="menu-items">
-                  <div className="menu-item">❤️ Favorites</div>
-                  <div className="menu-item">📍 Address</div>
-                  <div className="menu-item">🧾 Orders</div>
-                  <div className="menu-item">❓ Help</div>
-                  <div className="menu-item">⚙️ Settings</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      {/* Toast Notification */}
+      {toast && <div className="toast">{toast}</div>}
 
       <BannerCarousel />
 
       <section className="menu-heading-section">
         <h2>Explore Our Hottest Pizzas</h2>
+
+        {/* Search + Sort Row */}
+        <div className="search-sort-row">
+          <input
+            type="text"
+            placeholder="🔍 Search pizza..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select
+            className="sort-select"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+          >
+            <option value="default">Sort: Default</option>
+            <option value="low">Price: Low → High</option>
+            <option value="high">Price: High → Low</option>
+          </select>
+        </div>
+
+        {/* Category Filters */}
         <div className="category-filters">
           {["All", "Veg", "Non-Veg", "Spicy"].map((cat) => (
             <button
@@ -137,19 +106,29 @@ function HomePage() {
         </div>
       </section>
 
-      <div className="pizza-list">
-        {filteredPizzas.map((pizza) => (
-          <div key={pizza.id} className="pizza-card">
-            <img src={pizza.image} alt={pizza.name} className="pizza-image" />
-            <h3>{pizza.name}</h3>
-            <p>₹{pizza.price}</p>
-            <div className="card-buttons">
-              <button onClick={() => navigate(`/pizza/${pizza.id}`)}>View Details</button>
-              <button onClick={() => addToCart(pizza)}>Add to Cart</button>
+      {/* Pizza Grid */}
+      {filteredPizzas.length === 0 ? (
+        <div className="no-results">
+          <p>😕 No pizzas found for "<strong>{searchTerm}</strong>"</p>
+          <button className="btn-primary" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}>
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="pizza-list">
+          {filteredPizzas.map((pizza) => (
+            <div key={pizza.id} className="pizza-card">
+              <img src={pizza.image} alt={pizza.name} className="pizza-image" />
+              <h3>{pizza.name}</h3>
+              <p>₹{pizza.price}</p>
+              <div className="card-buttons">
+                <button onClick={() => navigate(`/pizza/${pizza.id}`)}>View Details</button>
+                <button onClick={() => handleAddToCart(pizza)}>Add to Cart</button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

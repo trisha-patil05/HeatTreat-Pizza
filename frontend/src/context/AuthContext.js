@@ -11,36 +11,35 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      // Verify token on app load
-      api.get("/test").then(res => {
-        setUser(res.data.user);
-      }).catch(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (token && savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
         localStorage.removeItem("token");
-      }).finally(() => {
-        setLoading(false);
-      });
-    } else {
-      setLoading(false);
+        localStorage.removeItem("user");
+      }
     }
+    setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    const { data } = await api.post("/auth/login", { email, password });
+  const login = async (username, password) => {
+    const { data } = await api.post("/auth/login", { username, password });
     localStorage.setItem("token", data.token);
-    setUser(data);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    setUser(data.user);
     return data;
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post("/auth/signup", { name, email, password });
-    localStorage.setItem("token", data.token);
-    setUser(data);
+  const register = async (username, email, password) => {
+    const { data } = await api.post("/auth/register", { username, email, password });
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
   };
 
