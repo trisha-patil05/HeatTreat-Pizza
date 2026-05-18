@@ -17,7 +17,6 @@ export const CartProvider = ({ children }) => {
   const addToCart = (item) => {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((cartItem) => cartItem.id === item.id);
-
       if (existingItem) {
         return prevItems.map((cartItem) =>
           cartItem.id === item.id
@@ -25,7 +24,6 @@ export const CartProvider = ({ children }) => {
             : cartItem
         );
       }
-
       return [...prevItems, { ...item, quantity: 1 }];
     });
   };
@@ -56,6 +54,12 @@ export const CartProvider = ({ children }) => {
     return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
+  // ✅ Logout pe cart clear karo
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem("cartItems");
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -64,7 +68,8 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
-        getCartTotal
+        getCartTotal,
+        clearCart, // ✅ Export kiya
       }}
     >
       {children}

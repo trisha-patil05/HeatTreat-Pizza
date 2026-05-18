@@ -1,62 +1,64 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import "./Login.css";
 
 function Login() {
-  const navigate = useNavigate();
+  const navigate         = useNavigate();
   const { login, register } = useAuth();
+  const { showToast }    = useToast(); // ✅ Toast
 
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin]   = useState(true);
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading]   = useState(false); // ✅ Loading state
 
   const handleSubmit = async () => {
-    setError("");
-
     if (!username || !password || (!isLogin && !email)) {
-      setError("Please fill all fields");
+      showToast("Please fill all fields", "error");
       return;
     }
 
+    setLoading(true);
     try {
       if (isLogin) {
         await login(username, password);
+        showToast("Welcome back! 🍕", "success");
         navigate("/home");
       } else {
-        // Register via direct fetch (AuthContext ka register alag hai)
         const res = await fetch("http://localhost:5000/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password })
         });
-
         const data = await res.json();
 
         if (res.ok) {
-          setUsername("");
-          setEmail("");
-          setPassword("");
+          showToast("✅ Registered! Ab login karo.", "success");
+          setUsername(""); setEmail(""); setPassword("");
           setIsLogin(true);
-          setError("✅ Registered! Ab login karo.");
         } else {
-          setError(data.message || "Registration failed");
+          showToast(data.message || "Registration failed", "error");
         }
       }
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Something went wrong");
+      showToast(err.message || "Something went wrong", "error");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Enter key support
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSubmit();
   };
 
   return (
     <div
       className="login-bg"
-      style={{
-        backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)`
-      }}
+      style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)` }}
     >
       <div className="login-container">
         <h2>{isLogin ? "Login" : "Register"}</h2>
@@ -67,6 +69,8 @@ function Login() {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
           />
 
           {!isLogin && (
@@ -75,6 +79,8 @@ function Login() {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
             />
           )}
 
@@ -83,20 +89,23 @@ function Login() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
           />
 
-          {error && (
-            <p style={{ color: error.startsWith("✅") ? "green" : "red", textAlign: "center", marginTop: "8px" }}>
-              {error}
-            </p>
-          )}
-
-          <button onClick={handleSubmit}>
-            {isLogin ? "Login" : "Register"}
+          {/* ✅ Loading button */}
+          <button onClick={handleSubmit} disabled={loading}>
+            {loading
+              ? (isLogin ? "⏳ Logging in..." : "⏳ Registering...")
+              : (isLogin ? "Login" : "Register")
+            }
           </button>
 
           <p className="toggle-form">
-            <span className="toggle-link" onClick={() => { setIsLogin(!isLogin); setError(""); }}>
+            <span
+              className="toggle-link"
+              onClick={() => { if (!loading) setIsLogin(!isLogin); }}
+            >
               {isLogin ? "New user? Register here" : "Already registered? Login"}
             </span>
           </p>
