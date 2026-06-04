@@ -7,7 +7,11 @@ const profileRoutes = require("./routes/profileRoutes");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "*", // ✅ Vercel frontend allow karo
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -16,17 +20,21 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.json({ message: "Backend connected successfully 🚀" });
+  res.json({ message: "HeatTreat Pizza Backend 🍕 Running!" });
 });
 
 app.use("/api/auth",    authRoutes);
 app.use("/api/orders",  orderRoutes);
-app.use("/api/profile", profileRoutes); // ✅ Profile routes
+app.use("/api/profile", profileRoutes);
 
-mongoose.connect("mongodb+srv://Trisha05:Eskt5105@cluster1.edjmjaq.mongodb.net/HeatTreatPizzaDB")
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log("MongoDB Error:", err));
+// ✅ .env variables use karo
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://Trisha05:Eskt5105@cluster1.edjmjaq.mongodb.net/HeatTreatPizzaDB";
+const PORT      = process.env.PORT || 5000;
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.log("❌ MongoDB Error:", err));
+
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
