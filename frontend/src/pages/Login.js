@@ -28,9 +28,9 @@ function Login() {
     setLoading(true);
     try {
       if (mode === "login") {
-        await login(username, password);
-        showToast("Welcome back! 🍕", "success");
-        navigate("/home");
+        const data = await login(username, password);
+        showToast(data?.user?.role === "admin" ? "Welcome Admin! 👑" : "Welcome back! 🍕", "success");
+        navigate(data?.user?.role === "admin" ? "/admin-dashboard" : "/home");
       } else {
         const res  = await fetch("http://localhost:5000/api/auth/register", {
           method: "POST", headers: { "Content-Type": "application/json" },

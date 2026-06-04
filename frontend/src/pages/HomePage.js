@@ -35,7 +35,8 @@ const pizzas = [
   { id: 28, name: 'Spinach and Artichoke',  price: 270, category: 'Veg',           image: '/pizzas/28.jpg' },
 ];
 
-// Get average rating for a pizza from localStorage
+const ITEMS_PER_PAGE = 8;
+
 function getAvgRating(pizzaId) {
   const reviews = JSON.parse(localStorage.getItem(`reviews_${pizzaId}`) || '[]');
   if (reviews.length === 0) return null;
@@ -43,7 +44,6 @@ function getAvgRating(pizzaId) {
   return { avg: avg.toFixed(1), count: reviews.length };
 }
 
-// Star display component
 function StarDisplay({ rating }) {
   return (
     <div className="star-display">
@@ -54,18 +54,39 @@ function StarDisplay({ rating }) {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <div className="pizza-card skeleton-card">
+      <div className="skeleton skeleton-image" />
+      <div className="skeleton skeleton-title" />
+      <div className="skeleton skeleton-price" />
+      <div className="skeleton skeleton-rating" />
+      <div className="skeleton-buttons">
+        <div className="skeleton skeleton-btn" />
+        <div className="skeleton skeleton-btn" />
+      </div>
+    </div>
+  );
+}
+
 function HomePage() {
   const [searchTerm, setSearchTerm]             = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortOrder, setSortOrder]               = useState('default');
   const [loadingId, setLoadingId]               = useState(null);
   const [ratings, setRatings]                   = useState({});
+  const [isLoading, setIsLoading]               = useState(true);
+  const [currentPage, setCurrentPage]           = useState(1);
 
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const navigate      = useNavigate();
 
-  // Load all ratings from localStorage
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const allRatings = {};
     pizzas.forEach(p => {
@@ -74,6 +95,11 @@ function HomePage() {
     });
     setRatings(allRatings);
   }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, sortOrder]);
 
   const handleAddToCart = (pizza) => {
     setLoadingId(pizza.id);
@@ -97,6 +123,33 @@ function HomePage() {
     const rb = ratings[b.id]?.avg || 0;
     return rb - ra;
   });
+
+  // Pagination
+  const totalPages   = Math.ceil(filteredPizzas.length / ITEMS_PER_PAGE);
+  const startIndex   = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedPizzas = filteredPizzas.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Page numbers to show
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className="home-container">
@@ -134,7 +187,12 @@ function HomePage() {
         </div>
       </section>
 
-      {filteredPizzas.length === 0 ? (
+      {/* Skeleton */}
+      {isLoading ? (
+        <div className="pizza-list">
+          {Array(8).fill(0).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : filteredPizzas.length === 0 ? (
         <div className="no-results">
           <p>😕 No pizzas found for "<strong>{searchTerm}</strong>"</p>
           <button className="btn-primary" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}>
@@ -142,34 +200,79 @@ function HomePage() {
           </button>
         </div>
       ) : (
-        <div className="pizza-list">
-          {filteredPizzas.map((pizza) => (
-            <div key={pizza.id} className="pizza-card">
-              <img src={pizza.image} alt={pizza.name} className="pizza-image" />
-              <h3>{pizza.name}</h3>
-              <p>₹{pizza.price}</p>
+        <>
+          {/* Results count */}
+          <p className="results-count">
+            Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filteredPizzas.length)} of {filteredPizzas.length} pizzas
+          </p>
 
-              {/* ⭐ Rating display */}
-              {ratings[pizza.id] ? (
-                <div className="card-rating">
-                  <StarDisplay rating={ratings[pizza.id].avg} />
-                  <span className="rating-text">{ratings[pizza.id].avg} ({ratings[pizza.id].count})</span>
+          {/* Pizza Grid */}
+          <div className="pizza-list">
+            {paginatedPizzas.map((pizza) => (
+              <div key={pizza.id} className="pizza-card">
+                <img src={pizza.image} alt={pizza.name} className="pizza-image" />
+                <h3>{pizza.name}</h3>
+                <p>₹{pizza.price}</p>
+
+                {ratings[pizza.id] ? (
+                  <div className="card-rating">
+                    <StarDisplay rating={ratings[pizza.id].avg} />
+                    <span className="rating-text">{ratings[pizza.id].avg} ({ratings[pizza.id].count})</span>
+                  </div>
+                ) : (
+                  <div className="card-rating">
+                    <span className="no-rating">No ratings yet</span>
+                  </div>
+                )}
+
+                <div className="card-buttons">
+                  <button onClick={() => navigate(`/pizza/${pizza.id}`)}>View Details</button>
+                  <button onClick={() => handleAddToCart(pizza)} disabled={loadingId === pizza.id}>
+                    {loadingId === pizza.id ? "Adding..." : "Add to Cart"}
+                  </button>
                 </div>
-              ) : (
-                <div className="card-rating">
-                  <span className="no-rating">No ratings yet</span>
-                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="pagination">
+              {/* Prev */}
+              <button
+                className="page-btn"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                ← Prev
+              </button>
+
+              {/* Page Numbers */}
+              {getPageNumbers().map((page, i) =>
+                page === '...' ? (
+                  <span key={i} className="page-dots">...</span>
+                ) : (
+                  <button
+                    key={i}
+                    className={`page-btn ${currentPage === page ? 'active-page' : ''}`}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </button>
+                )
               )}
 
-              <div className="card-buttons">
-                <button onClick={() => navigate(`/pizza/${pizza.id}`)}>View Details</button>
-                <button onClick={() => handleAddToCart(pizza)} disabled={loadingId === pizza.id}>
-                  {loadingId === pizza.id ? "Adding..." : "Add to Cart"}
-                </button>
-              </div>
+              {/* Next */}
+              <button
+                className="page-btn"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next →
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
