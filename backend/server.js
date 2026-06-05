@@ -8,7 +8,7 @@ const profileRoutes = require("./routes/profileRoutes");
 const app = express();
 
 app.use(cors({
-  origin: "*", // ✅ Vercel frontend allow karo
+  origin: "https://your-frontend-name.vercel.app",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
