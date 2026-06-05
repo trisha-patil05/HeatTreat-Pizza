@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -36,36 +36,36 @@ export default function ProfilePage() {
 
     const [orderStats, setOrderStats] = useState(null);
 
-    // Fetch profile from backend on mount
-    useEffect(() => {
-        fetchProfile();
-    }, []);
+    const fetchProfile = useCallback(async () => {
+    try {
+        setFetchLoading(true);
+        const { data } = await api.get("/profile");
+        const u = data.user;
 
-    const fetchProfile = async () => {
-        try {
-            setFetchLoading(true);
-            const { data } = await api.get("/profile");
-            const u = data.user;
+        setForm({
+            username: u.username || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            address: u.address || '',
+        });
+    } catch (err) {
+        if (user) {
             setForm({
-                username: u.username || '',
-                email: u.email || '',
-                phone: u.phone || '',
-                address: u.address || '',
+                username: user.name || user.username || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                address: user.address || '',
             });
-        } catch (err) {
-            // Fallback to localStorage user
-            if (user) {
-                setForm({
-                    username: user.name || user.username || '',
-                    email: user.email || '',
-                    phone: user.phone || '',
-                    address: user.address || '',
-                });
-            }
-        } finally {
-            setFetchLoading(false);
         }
-    };
+    } finally {
+        setFetchLoading(false);
+    }
+}, [user]);
+
+ // Fetch profile from backend on mount
+    useEffect(() => {
+    fetchProfile();
+}, [fetchProfile]);
 
     // Fetch order stats
     useEffect(() => {
