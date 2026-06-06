@@ -16,55 +16,55 @@ Designed with a clean dark UI and modular architecture, the project demonstrates
 ## 🚀 Features
 
 ### 👤 Authentication & Security
-- 🔐 JWT-based Login & Registration
-- 🛡️ Protected Routes — unauthorized users redirected to login
-- 👑 Role-based Access Control — Admin vs User
-- 🔑 Forgot Password with OTP via Email
-- 🚪 Logout clears cart automatically (security best practice)
+- JWT-based Login & Registration
+- Protected Routes — unauthorized users redirected to login
+- Role-based Access Control — Admin vs User
+- Forgot Password with OTP via Email
+- Logout clears cart automatically (security best practice)
 
 ### 🍕 Pizza & Cart
-- 🏠 Landing page with modern UI & banner carousel
-- 🍕 Pizza listing with search, filters & sort
-- 🔍 Global Navbar search — find pizza from any page
-- 🛒 Shopping cart with quantity management
-- 🏷️ Promo code support (HEAT10, PIZZA20)
-- 📦 Order placement with GST calculation
+- Landing page with modern UI & banner carousel
+- Pizza listing with search, filters & sort
+- Global Navbar search — find pizza from any page
+- Shopping cart with quantity management
+- Promo code support (HEAT10, PIZZA20)
+- Order placement with GST calculation
 
 ### 📋 Order Management
-- 🧾 Order confirmation with receipt download (.txt)
-- 💬 WhatsApp share — order details share karo
-- 📜 Order History — all past orders from MongoDB
-- 📍 Order progress tracker — Placed → Preparing → Out for Delivery → Delivered
+- Order confirmation with receipt download (.txt)
+- WhatsApp share — order details share karo
+- Order History — all past orders from MongoDB
+- Order progress tracker — Placed → Preparing → Out for Delivery → Delivered
 
 ### 📧 Email Notifications
-- ✅ Order confirmation email — beautiful HTML template
-- 🔄 Status update email — auto-sent when admin updates order
-- 🔑 OTP email for password reset
+- Order confirmation email — beautiful HTML template
+- Status update email — auto-sent when admin updates order
+- OTP email for password reset
 
 ### 👤 User Profile
-- 📝 Edit name, email, phone, address
-- 🔒 Change password with strength indicator
-- 📊 Order statistics — total spent, orders count
+- Edit name, email, phone, address
+- Change password with strength indicator
+- Order statistics — total spent, orders count
 
 ### 🧑‍💼 Admin Dashboard
-- 📊 Overview — Revenue, Orders, Users stats
-- 📈 Analytics — Bar charts + Donut charts (pure CSS, no library)
+- Overview — Revenue, Orders, Users stats
+- Analytics — Bar charts + Donut charts (pure CSS, no library)
   - Last 7 days orders & revenue
   - Order status breakdown
   - Payment method breakdown
   - Top selling pizzas
-- 🍕 Pizza Management — Add, Delete, Toggle availability
-- 📦 Orders Tab — Real MongoDB orders, live status update
-- 👥 Users Tab — All registered users from MongoDB
+- Pizza Management — Add, Delete, Toggle availability
+- Orders Tab — Real MongoDB orders, live status update
+- Users Tab — All registered users from MongoDB
 
 ### 🎨 UI/UX
-- 🌙 Dark theme throughout
-- ✨ Page animations — fade + slide-up on every route
-- 🃏 Staggered pizza card animations
-- 🔔 Toast notifications — success, error, info, warning
-- ⏳ Loading states on all buttons
-- 🚫 Custom 404 page with spinning pizza
-- 📱 Responsive design
+- Dark theme throughout
+- Page animations — fade + slide-up on every route
+- Staggered pizza card animations
+- Toast notifications — success, error, info, warning
+- Loading states on all buttons
+- Custom 404 page with spinning pizza
+- Responsive design
 
 ---
 
