@@ -236,6 +236,7 @@ Then logout and login again — ⚙️ Admin link will appear in Navbar.
 
 **Trisha Patil**
 GitHub: [github.com/trisha-patil05](https://github.com/trisha-patil05)
+
 LinkedIn: [linkedin.com/in/trisha-patil05](https://www.linkedin.com/in/trisha-patil05/)
 
 ---
