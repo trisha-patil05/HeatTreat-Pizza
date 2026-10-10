@@ -45,12 +45,16 @@ export default function AdminDashboard() {
       const data = await res.json();
       const list = data.orders || [];
       setOrders(list);
-      setStats({
-        revenue: list.filter(o => o.status === "Delivered").reduce((s, o) => s + o.totalAmount, 0),
-        total:   list.length,
-        pending: list.filter(o => !["Delivered","Cancelled"].includes(o.status)).length,
-        users:   stats.users
-      });
+      setStats(prev => ({
+  ...prev,
+  revenue: list
+    .filter(o => o.status === "Delivered")
+    .reduce((s, o) => s + o.totalAmount, 0),
+  total: list.length,
+  pending: list.filter(
+    o => !["Delivered", "Cancelled"].includes(o.status)
+  ).length
+}));
     } catch (e) { console.error(e); }
     finally { setOL(false); }
   }, []);
@@ -67,9 +71,14 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "Overview" || activeTab === "Orders") fetchOrders();
-    if (activeTab === "Overview" || activeTab === "Users")  fetchUsers();
-  }, [activeTab]);
+  if (activeTab === "Overview" || activeTab === "Orders") {
+    fetchOrders();
+  }
+
+  if (activeTab === "Overview" || activeTab === "Users") {
+    fetchUsers();
+  }
+}, [activeTab, fetchOrders, fetchUsers]);
 
   const updateStatus = async (id, status) => {
     try {
