@@ -23,7 +23,7 @@ function Login() {
     if (!username || !password) { showError("Please fill all fields"); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/auth/login", {
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/auth/login", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
       });
@@ -41,7 +41,7 @@ function Login() {
     if (!username || !email || !password) { showError("Please fill all fields"); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/auth/register", {
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/auth/register", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password })
       });
@@ -58,7 +58,7 @@ function Login() {
     if (!fpEmail.trim()) { showError("Email daalo!"); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/auth/forgot-password", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: fpEmail })
       });
@@ -74,7 +74,7 @@ function Login() {
     if (!otp.trim()) { showError("OTP daalo!"); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/auth/verify-otp", {
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/auth/verify-otp", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: fpEmail, otp })
       });
@@ -92,7 +92,7 @@ function Login() {
     if (newPassword.length < 6)     { showError("6+ characters chahiye!"); return; }
     setLoading(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/auth/reset-password", {
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/auth/reset-password", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: fpEmail, otp, newPassword })
       });

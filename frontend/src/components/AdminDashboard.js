@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   const fetchOrders = useCallback(async () => {
     setOL(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/orders/all", { headers: { Authorization: `Bearer ${getToken()}` } });
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/orders/all", { headers: { Authorization: `Bearer ${getToken()}` } });
       const data = await res.json();
       const list = data.orders || [];
       setOrders(list);
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
   const fetchUsers = useCallback(async () => {
     setUL(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/auth/users", { headers: { Authorization: `Bearer ${getToken()}` } });
+      const res  = await fetch("https://heattreat-backend.onrender.com/api/auth/users", { headers: { Authorization: `Bearer ${getToken()}` } });
       const data = await res.json();
       setUsers(data.users || []);
       setStats(s => ({ ...s, users: (data.users || []).length }));
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
 
   const updateStatus = async (id, status) => {
     try {
-      await fetch(`http://localhost:5000/api/orders/${id}/status`, {
+      await fetch(`https://heattreat-backend.onrender.com/api/orders/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({ status })
