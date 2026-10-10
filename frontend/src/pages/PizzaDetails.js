@@ -1,284 +1,187 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 
-const toppingsOptions = ['Olives', 'Onions', 'Peppers', 'Mushrooms', 'Jalapeños', 'Pineapple', 'Bacon', 'Cheese'];
-const sizes   = ['Small', 'Medium', 'Large', 'Extra Large'];
-const crusts  = ['Thin Crust', 'Thick Crust', 'Stuffed Crust'];
-const sauces  = ['Tomato Sauce', 'Pesto Sauce', 'BBQ Sauce', 'Garlic Sauce'];
-const drinks  = ['Coke', 'Pepsi', 'Sprite', 'Lemonade', 'Iced Tea'];
-
-const sizePriceMap = { Small: 0, Medium: 50, Large: 100, 'Extra Large': 150 };
-const basePrice    = 300;
-const toppingPrice = 20;
-
-const galleryImages = [
-  '/pizzas/1.jpeg',
-  '/pizzas/5.jpeg',
-  '/pizzas/7.jpeg',
-  '/pizzas/10.jpeg',
+const pizzas = [
+  { id: 1,  name: 'Margherita',             price: 200, category: 'Veg',              image: '/pizzas/1.jpeg',     desc: 'Classic tomato sauce with fresh mozzarella and basil leaves.' },
+  { id: 2,  name: 'Pepperoni',              price: 250, category: 'Non-Veg',          image: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Pepperoni_pizza.jpg', desc: 'Loaded with spicy pepperoni slices and melted mozzarella.' },
+  { id: 3,  name: 'Veggie Delight',         price: 230, category: 'Veg',              image: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Eq_it-na_pizza-margherita_sep2005_sml.jpg', desc: 'Fresh bell peppers, mushrooms, olives and onions.' },
+  { id: 4,  name: 'BBQ Chicken',            price: 270, category: 'Non-Veg',          image: '/pizzas/2.jpg',      desc: 'Smoky BBQ chicken with caramelized onions and cheddar.' },
+  { id: 5,  name: 'Paneer Tikka',           price: 260, category: 'Veg, Spicy',       image: '/pizzas/5.jpeg',     desc: 'Tandoori paneer with bell peppers and mint chutney base.' },
+  { id: 6,  name: 'Hawaiian',               price: 240, category: 'Non-Veg',          image: '/pizzas/6.jpeg',     desc: 'Ham and pineapple with creamy mozzarella.' },
+  { id: 7,  name: 'Four Cheese',            price: 280, category: 'Veg',              image: '/pizzas/7.jpeg',     desc: 'Mozzarella, cheddar, parmesan and gouda — cheese lovers dream.' },
+  { id: 8,  name: 'Mexican Green Wave',     price: 250, category: 'Veg, Spicy',       image: '/pizzas/8.jpeg',     desc: 'Jalapenos, corn, black beans and salsa on herb base.' },
+  { id: 9,  name: 'Seafood Supreme',        price: 300, category: 'Non-Veg',          image: '/pizzas/9.jpg',      desc: 'Shrimp, squid and fish with garlic butter sauce.' },
+  { id: 10, name: 'Mushroom and Truffle',   price: 320, category: 'Veg',              image: '/pizzas/10.jpeg',    desc: 'Wild mushrooms with truffle oil and parmesan.' },
+  { id: 11, name: 'Buffalo Chicken',        price: 290, category: 'Non-Veg, Spicy',   image: '/pizzas/11(1).jpeg', desc: 'Spicy buffalo chicken with blue cheese drizzle.' },
+  { id: 12, name: 'Pesto Chicken',          price: 280, category: 'Non-Veg',          image: '/pizzas/12.jpeg',    desc: 'Grilled chicken on basil pesto with sun-dried tomatoes.' },
+  { id: 13, name: 'Smoked Salmon',          price: 350, category: 'Non-Veg',          image: '/pizzas/13.jpeg',    desc: 'Norwegian smoked salmon with cream cheese and capers.' },
+  { id: 14, name: 'Cheese and Spinach',     price: 230, category: 'Veg',              image: '/pizzas/14.jpeg',    desc: 'Fresh spinach with ricotta and mozzarella blend.' },
+  { id: 15, name: 'Tandoori Chicken',       price: 270, category: 'Non-Veg, Spicy',   image: '/pizzas/15.jpeg',    desc: 'Marinated tandoori chicken with onions and green chutney.' },
+  { id: 16, name: 'Meat Lovers',            price: 330, category: 'Non-Veg',          image: '/pizzas/16.jpg',     desc: 'Pepperoni, sausage, bacon and ground beef.' },
+  { id: 17, name: 'Salami',                 price: 260, category: 'Non-Veg',          image: '/pizzas/17.jpeg',    desc: 'Italian salami with olives and roasted peppers.' },
+  { id: 18, name: 'Bianca',                 price: 250, category: 'Veg',              image: '/pizzas/18.jpeg',    desc: 'White pizza with garlic oil, ricotta and fresh herbs.' },
+  { id: 19, name: 'Caprese',                price: 220, category: 'Veg',              image: '/pizzas/19.jpeg',    desc: 'Fresh tomatoes, mozzarella and basil drizzled with olive oil.' },
+  { id: 20, name: 'Prosciutto and Arugula', price: 290, category: 'Non-Veg',          image: '/pizzas/20.jpeg',    desc: 'Thin-sliced prosciutto with peppery arugula and parmesan.' },
+  { id: 21, name: 'Eggplant Parmesan',      price: 260, category: 'Veg',              image: '/pizzas/21.jpeg',    desc: 'Breaded eggplant with marinara and melted mozzarella.' },
+  { id: 22, name: 'Cheeseburger Pizza',     price: 280, category: 'Non-Veg',          image: '/pizzas/22.jpeg',    desc: 'Ground beef, pickles, mustard and cheddar on ketchup base.' },
+  { id: 23, name: 'Breakfast Pizza',        price: 300, category: 'Non-Veg',          image: '/pizzas/23.jpeg',    desc: 'Eggs, bacon, sausage and cheese on cream base.' },
+  { id: 24, name: 'Carbonara',              price: 310, category: 'Non-Veg',          image: '/pizzas/24.jpeg',    desc: 'Creamy carbonara sauce with pancetta and black pepper.' },
+  { id: 25, name: 'Peking Duck',            price: 350, category: 'Non-Veg',          image: '/pizzas/25.jpeg',    desc: 'Shredded Peking duck with hoisin sauce and spring onions.' },
+  { id: 26, name: 'Zaatar',                 price: 220, category: 'Veg',              image: '/pizzas/26.jpeg',    desc: 'Middle Eastern zaatar spice blend with olive oil and cheese.' },
+  { id: 27, name: 'Vegan Delight',          price: 240, category: 'Veg',              image: '/pizzas/27.jpeg',    desc: 'Plant-based toppings with vegan cheese on herb base.' },
+  { id: 28, name: 'Spinach and Artichoke',  price: 270, category: 'Veg',              image: '/pizzas/28.jpg',     desc: 'Creamy spinach artichoke dip spread with melted cheese.' },
 ];
 
-// ── Star Rating Input ──
-function StarInput({ value, onChange }) {
-  const [hovered, setHovered] = useState(0);
-  return (
-    <div className="star-input">
-      {[1, 2, 3, 4, 5].map(star => (
-        <span
-          key={star}
-          className={`star-btn ${star <= (hovered || value) ? 'filled' : ''}`}
-          onMouseEnter={() => setHovered(star)}
-          onMouseLeave={() => setHovered(0)}
-          onClick={() => onChange(star)}
-        >★</span>
-      ))}
+const SIZES    = ['Small', 'Medium', 'Large'];
+const CRUSTS   = ['Thin', 'Thick', 'Stuffed'];
+const SAUCES   = ['Tomato', 'BBQ', 'White', 'Pesto'];
+const TOPPINGS = ['Extra Cheese', 'Olives', 'Mushrooms', 'Jalapeños', 'Corn', 'Onions'];
+const DRINKS   = ['None', 'Coke', 'Pepsi', 'Sprite', 'Water'];
+
+const SIZE_PRICES  = { Small: 0, Medium: 30, Large: 60 };
+const CRUST_PRICES = { Thin: 0, Thick: 20, Stuffed: 50 };
+
+export default function PizzaDetails() {
+  const { id }   = useParams();
+  const navigate = useNavigate();
+
+  const pizza = pizzas.find(p => p.id === parseInt(id));
+
+  const [size,     setSize]     = useState('Medium');
+  const [crust,    setCrust]    = useState('Thin');
+  const [sauce,    setSauce]    = useState('Tomato');
+  const [toppings, setToppings] = useState([]);
+  const [drink,    setDrink]    = useState('None');
+  const [added,    setAdded]    = useState(false);
+
+  if (!pizza) return (
+    <div className="pizza-details-page">
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <p style={{ color: '#888', marginBottom: '20px' }}>🍕 Pizza not found!</p>
+        <button className="btn-primary" onClick={() => navigate('/home')}>Back to Menu</button>
+      </div>
     </div>
   );
-}
-
-// ── Star Display ──
-function StarDisplay({ rating }) {
-  return (
-    <div className="star-display">
-      {[1, 2, 3, 4, 5].map(star => (
-        <span key={star} className={`star ${star <= Math.round(rating) ? 'filled' : ''}`}>★</span>
-      ))}
-    </div>
-  );
-}
-
-function PizzaDetails() {
-  const { id }     = useParams();
-  const navigate   = useNavigate();
-  const { addToCart } = useCart();
-  const { user }   = useAuth();
-
-  const [toppings, setToppings]         = useState([]);
-  const [size, setSize]                 = useState('Medium');
-  const [crust, setCrust]               = useState('Thin Crust');
-  const [sauce, setSauce]               = useState('Tomato Sauce');
-  const [drink, setDrink]               = useState('Coke');
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [priceFlash, setPriceFlash]     = useState(false);
-  const [toast, setToast]               = useState('');
-
-  // Reviews state
-  const [reviews, setReviews]           = useState([]);
-  const [newRating, setNewRating]       = useState(0);
-  const [newComment, setNewComment]     = useState('');
-  const [reviewError, setReviewError]   = useState('');
-  const [showReviewForm, setShowReviewForm] = useState(false);
-
-  const totalPrice = basePrice + sizePriceMap[size] + toppings.length * toppingPrice;
-
-  // Load reviews from localStorage
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem(`reviews_${id}`) || '[]');
-    setReviews(saved);
-  }, [id]);
-
-  useEffect(() => {
-    setPriceFlash(true);
-    const t = setTimeout(() => setPriceFlash(false), 400);
-    return () => clearTimeout(t);
-  }, [totalPrice]);
-
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
   const toggleTopping = (t) =>
     setToppings(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
 
+  const totalPrice = pizza.price + SIZE_PRICES[size] + CRUST_PRICES[crust];
+
   const handleAddToCart = () => {
-    addToCart({ id, name: `Pizza #${id}`, price: totalPrice, image: galleryImages[selectedImage], toppings, size, crust, sauce, drink });
-    showToast('🍕 Pizza added to cart!');
-    setTimeout(() => navigate('/cart'), 1500);
-  };
-
-  const handleOrder = () => {
-    localStorage.setItem('orderData', JSON.stringify({ pizzaId: id, toppings, size, crust, sauce, drink, totalPrice }));
-    navigate('/summary');
-  };
-
-  // Submit review
-  const handleSubmitReview = () => {
-    if (newRating === 0) { setReviewError('⭐ Please select a rating'); return; }
-    if (!newComment.trim()) { setReviewError('💬 Please write a comment'); return; }
-
-    const review = {
-      user: user?.name || user?.username || 'Anonymous',
-      rating: newRating,
-      comment: newComment.trim(),
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    const item = {
+      id:       `${pizza.id}-${size}-${crust}`,
+      name:     pizza.name,
+      price:    totalPrice,
+      image:    pizza.image,
+      size, crust, sauce, toppings, drink,
+      quantity: 1
     };
-
-    const updated = [review, ...reviews];
-    localStorage.setItem(`reviews_${id}`, JSON.stringify(updated));
-    setReviews(updated);
-    setNewRating(0);
-    setNewComment('');
-    setReviewError('');
-    setShowReviewForm(false);
-    showToast('✅ Review submitted!');
+    const existing = cart.findIndex(c => c.id === item.id);
+    if (existing >= 0) cart[existing].quantity += 1;
+    else cart.push(item);
+    localStorage.setItem('cartItems', JSON.stringify(cart));
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
-
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
 
   return (
-    <div className="details-page">
-      {toast && <div className="toast">{toast}</div>}
+    <div className="pizza-details-page">
+      <div className="pizza-details-container">
 
-      <div className="details-container">
-        <h2 className="page-title">Customize Your Pizza #{id}</h2>
-        <p className="page-subtitle">Choose your size, crust, toppings, sauce, and drink.</p>
-
-        {/* 2 Column Layout */}
-        <div className="details-two-col">
-
-          {/* LEFT — Image + Price */}
-          <div className="details-left">
-            <img src={galleryImages[selectedImage]} alt={`Pizza ${id}`} className="pizza-preview-image" />
-            <div className="gallery-thumbnails">
-              {galleryImages.map((img, i) => (
-                <img key={i} src={img} alt={`view ${i + 1}`}
-                  className={`gallery-thumb ${selectedImage === i ? 'active-thumb' : ''}`}
-                  onClick={() => setSelectedImage(i)}
-                />
-              ))}
-            </div>
-
-            {/* Average Rating */}
-            {avgRating && (
-              <div className="details-avg-rating">
-                <StarDisplay rating={avgRating} />
-                <span>{avgRating} / 5 &nbsp;({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
-              </div>
-            )}
-
-            <div className={`price-box ${priceFlash ? 'price-flash' : ''}`} style={{ marginTop: '20px' }}>
-              <p>Base Price: ₹{basePrice}</p>
-              <p>Size Charge: ₹{sizePriceMap[size]}</p>
-              <p>Toppings ({toppings.length}): ₹{toppings.length * toppingPrice}</p>
-              <h3>Total: ₹{totalPrice}</h3>
-            </div>
-
-            <div className="details-btn-row" style={{ marginTop: '16px' }}>
-              <button className="btn-primary" onClick={handleAddToCart}>Add to Cart</button>
-              <button className="btn-outline" onClick={handleOrder}>Place Order</button>
-            </div>
-          </div>
-
-          {/* RIGHT — Options */}
-          <div className="details-right">
-            <div className="input-group">
-              <label className="input-label">Size</label>
-              <select className="input-field" value={size} onChange={(e) => setSize(e.target.value)}>
-                {sizes.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="input-group">
-              <label className="input-label">Crust</label>
-              <select className="input-field" value={crust} onChange={(e) => setCrust(e.target.value)}>
-                {crusts.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="input-group">
-              <label className="input-label">Sauce</label>
-              <select className="input-field" value={sauce} onChange={(e) => setSauce(e.target.value)}>
-                {sauces.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="input-group">
-              <label className="input-label">Drink</label>
-              <select className="input-field" value={drink} onChange={(e) => setDrink(e.target.value)}>
-                {drinks.map(d => <option key={d}>{d}</option>)}
-              </select>
-            </div>
-            <div className="input-group">
-              <label className="input-label">Toppings</label>
-              <div className="toppings-grid">
-                {toppingsOptions.map(top => (
-                  <label key={top} className="topping-item">
-                    <input type="checkbox" checked={toppings.includes(top)} onChange={() => toggleTopping(top)} />
-                    {top}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Image */}
+        <div>
+          <img src={pizza.image} alt={pizza.name} className="pizza-details-image" />
         </div>
 
-        {/* ── REVIEWS SECTION ── */}
-        <div className="reviews-section">
-          <div className="reviews-header">
-            <h3 className="reviews-title">
-              ⭐ Reviews {avgRating && <span className="avg-badge">{avgRating}/5</span>}
-            </h3>
-            <button
-              className="btn-outline"
-              style={{ fontSize: '13px', padding: '8px 16px' }}
-              onClick={() => setShowReviewForm(!showReviewForm)}
-            >
-              {showReviewForm ? '✕ Cancel' : '+ Write Review'}
-            </button>
-          </div>
+        {/* Info */}
+        <div className="pizza-details-info">
+          <h2>{pizza.name}</h2>
+          <p style={{ color: '#bbb', fontSize: '14px', marginBottom: '16px', lineHeight: '1.6' }}>
+            {pizza.desc}
+          </p>
+          <p className="pizza-details-price">₹{totalPrice}</p>
+          <p style={{ color: '#888', fontSize: '12px', marginBottom: '20px' }}>
+            Category: {pizza.category}
+          </p>
 
-          {/* Review Form */}
-          {showReviewForm && (
-            <div className="review-form">
-              <p className="input-label">Your Rating</p>
-              <StarInput value={newRating} onChange={setNewRating} />
-
-              <div className="input-group" style={{ marginTop: '14px' }}>
-                <label className="input-label">Your Review</label>
-                <textarea
-                  className="input-field"
-                  rows="3"
-                  placeholder="Share your experience..."
-                  value={newComment}
-                  onChange={(e) => { setNewComment(e.target.value); setReviewError(''); }}
-                />
-              </div>
-
-              {reviewError && <p className="field-error">{reviewError}</p>}
-
-              <button className="btn-primary" style={{ marginTop: '12px' }} onClick={handleSubmitReview}>
-                Submit Review
-              </button>
-            </div>
-          )}
-
-          {/* Reviews List */}
-          {reviews.length === 0 ? (
-            <div className="no-reviews">
-              <p>No reviews yet. Be the first to review! 🍕</p>
-            </div>
-          ) : (
-            <div className="reviews-list">
-              {reviews.map((review, i) => (
-                <div key={i} className="review-card">
-                  <div className="review-card-header">
-                    <div className="reviewer-avatar">
-                      {review.user[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="reviewer-name">{review.user}</p>
-                      <p className="review-date">{review.date}</p>
-                    </div>
-                    <StarDisplay rating={review.rating} />
-                  </div>
-                  <p className="review-comment">"{review.comment}"</p>
-                </div>
+          {/* Size */}
+          <div className="pizza-option-group">
+            <span className="pizza-option-label">Size</span>
+            <div className="pizza-options">
+              {SIZES.map(s => (
+                <button key={s} className={`pizza-option-btn ${size === s ? 'selected' : ''}`}
+                  onClick={() => setSize(s)}>
+                  {s} {SIZE_PRICES[s] > 0 ? `+₹${SIZE_PRICES[s]}` : ''}
+                </button>
               ))}
             </div>
-          )}
+          </div>
+
+          {/* Crust */}
+          <div className="pizza-option-group">
+            <span className="pizza-option-label">Crust</span>
+            <div className="pizza-options">
+              {CRUSTS.map(c => (
+                <button key={c} className={`pizza-option-btn ${crust === c ? 'selected' : ''}`}
+                  onClick={() => setCrust(c)}>
+                  {c} {CRUST_PRICES[c] > 0 ? `+₹${CRUST_PRICES[c]}` : ''}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sauce */}
+          <div className="pizza-option-group">
+            <span className="pizza-option-label">Sauce</span>
+            <div className="pizza-options">
+              {SAUCES.map(s => (
+                <button key={s} className={`pizza-option-btn ${sauce === s ? 'selected' : ''}`}
+                  onClick={() => setSauce(s)}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Toppings */}
+          <div className="pizza-option-group">
+            <span className="pizza-option-label">Extra Toppings</span>
+            <div className="pizza-options">
+              {TOPPINGS.map(t => (
+                <button key={t} className={`pizza-option-btn ${toppings.includes(t) ? 'selected' : ''}`}
+                  onClick={() => toggleTopping(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Drink */}
+          <div className="pizza-option-group">
+            <span className="pizza-option-label">Add a Drink</span>
+            <div className="pizza-options">
+              {DRINKS.map(d => (
+                <button key={d} className={`pizza-option-btn ${drink === d ? 'selected' : ''}`}
+                  onClick={() => setDrink(d)}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
+            <button className="btn-outline" onClick={() => navigate('/home')}>
+              ← Back to Menu
+            </button>
+            <button className="btn-primary" style={{ flex: 1 }} onClick={handleAddToCart}>
+              {added ? '✅ Added to Cart!' : `🛒 Add to Cart — ₹${totalPrice}`}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default PizzaDetails;

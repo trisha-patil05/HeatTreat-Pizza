@@ -1,56 +1,61 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useToast } from "../context/ToastContext";
-import "./Login.css";
 
 function Login() {
-  const navigate  = useNavigate();
-  const { login } = useAuth();
-  const { showToast } = useToast();
-
-  const [mode, setMode] = useState("login"); // login | register | forgot | verify | reset
+  const navigate = useNavigate();
+  const [mode, setMode] = useState("login");
 
   const [username, setUsername] = useState("");
-  const [email, setEmail]       = useState("");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState("");
 
-  const [fpEmail, setFpEmail]         = useState("");
-  const [otp, setOtp]                 = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPw, setConfirmPw]     = useState("");
+  const [fpEmail,      setFpEmail]      = useState("");
+  const [otp,          setOtp]          = useState("");
+  const [newPassword,  setNewPassword]  = useState("");
+  const [confirmPw,    setConfirmPw]    = useState("");
 
-  const handleSubmit = async () => {
-    if (!username || !password || (mode === "register" && !email)) {
-      showToast("Please fill all fields", "error"); return;
-    }
+  const showError = (msg) => { setError(msg); setTimeout(() => setError(""), 3000); };
+
+  // Login
+  const handleLogin = async () => {
+    if (!username || !password) { showError("Please fill all fields"); return; }
     setLoading(true);
     try {
-      if (mode === "login") {
-        const data = await login(username, password);
-        showToast(data?.user?.role === "admin" ? "Welcome Admin! 👑" : "Welcome back! 🍕", "success");
-        navigate(data?.user?.role === "admin" ? "/admin-dashboard" : "/home");
-      } else {
-        const res  = await fetch("http://localhost:5000/api/auth/register", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, email, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          showToast("✅ Registered! Ab login karo.", "success");
-          setUsername(""); setEmail(""); setPassword(""); setMode("login");
-        } else {
-          showToast(data.message || "Registration failed", "error");
-        }
-      }
-    } catch (err) {
-      showToast(err.message || "Something went wrong", "error");
-    } finally { setLoading(false); }
+      const res  = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError(data.message || "Login failed"); return; }
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user",  JSON.stringify(data.user));
+      navigate(data.user?.role === "admin" ? "/admin-dashboard" : "/home");
+    } catch { showError("Something went wrong"); }
+    finally { setLoading(false); }
   };
 
+  // Register
+  const handleRegister = async () => {
+    if (!username || !email || !password) { showError("Please fill all fields"); return; }
+    setLoading(true);
+    try {
+      const res  = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError(data.message || "Registration failed"); return; }
+      showError(""); setMode("login");
+      setUsername(""); setEmail(""); setPassword("");
+    } catch { showError("Something went wrong"); }
+    finally { setLoading(false); }
+  };
+
+  // Send OTP
   const handleSendOtp = async () => {
-    if (!fpEmail.trim()) { showToast("Email daalo!", "error"); return; }
+    if (!fpEmail.trim()) { showError("Email daalo!"); return; }
     setLoading(true);
     try {
       const res  = await fetch("http://localhost:5000/api/auth/forgot-password", {
@@ -58,14 +63,15 @@ function Login() {
         body: JSON.stringify({ email: fpEmail })
       });
       const data = await res.json();
-      if (res.ok) { showToast("✅ OTP bheja gaya! Email check karo.", "success"); setMode("verify"); }
-      else showToast(data.message || "Email nahi mila", "error");
-    } catch { showToast("Something went wrong", "error"); }
+      if (!res.ok) { showError(data.message || "Email nahi mila"); return; }
+      setMode("verify");
+    } catch { showError("Something went wrong"); }
     finally { setLoading(false); }
   };
 
+  // Verify OTP
   const handleVerifyOtp = async () => {
-    if (!otp.trim()) { showToast("OTP daalo!", "error"); return; }
+    if (!otp.trim()) { showError("OTP daalo!"); return; }
     setLoading(true);
     try {
       const res  = await fetch("http://localhost:5000/api/auth/verify-otp", {
@@ -73,16 +79,17 @@ function Login() {
         body: JSON.stringify({ email: fpEmail, otp })
       });
       const data = await res.json();
-      if (res.ok) { showToast("✅ OTP verified!", "success"); setMode("reset"); }
-      else showToast(data.message || "Wrong OTP", "error");
-    } catch { showToast("Something went wrong", "error"); }
+      if (!res.ok) { showError(data.message || "Wrong OTP"); return; }
+      setMode("reset");
+    } catch { showError("Something went wrong"); }
     finally { setLoading(false); }
   };
 
+  // Reset Password
   const handleResetPassword = async () => {
-    if (!newPassword || !confirmPw)    { showToast("Sab fields fill karo!", "error"); return; }
-    if (newPassword !== confirmPw)     { showToast("Passwords match nahi!", "error"); return; }
-    if (newPassword.length < 6)        { showToast("6+ characters chahiye!", "error"); return; }
+    if (!newPassword || !confirmPw) { showError("Sab fields fill karo!"); return; }
+    if (newPassword !== confirmPw)  { showError("Passwords match nahi!"); return; }
+    if (newPassword.length < 6)     { showError("6+ characters chahiye!"); return; }
     setLoading(true);
     try {
       const res  = await fetch("http://localhost:5000/api/auth/reset-password", {
@@ -90,124 +97,96 @@ function Login() {
         body: JSON.stringify({ email: fpEmail, otp, newPassword })
       });
       const data = await res.json();
-      if (res.ok) {
-        showToast("✅ Password reset ho gaya! Login karo.", "success");
-        setMode("login"); setFpEmail(""); setOtp(""); setNewPassword(""); setConfirmPw("");
-      } else showToast(data.message || "Reset failed", "error");
-    } catch { showToast("Something went wrong", "error"); }
+      if (!res.ok) { showError(data.message || "Reset failed"); return; }
+      setMode("login"); setFpEmail(""); setOtp(""); setNewPassword(""); setConfirmPw("");
+    } catch { showError("Something went wrong"); }
     finally { setLoading(false); }
   };
+
+  const titles = { login: "Login", register: "Register", forgot: "🔑 Forgot Password", verify: "✉️ Verify OTP", reset: "🔒 New Password" };
 
   return (
     <div className="login-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)` }}>
       <div className="login-container">
+        <h2>{titles[mode]}</h2>
 
-        {/* LOGIN */}
-        {mode === "login" && (
-          <>
-            <h2>Login</h2>
-            <div className="form-container">
-              <input type="text" placeholder="Username" value={username}
-                onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key==="Enter"&&handleSubmit()} disabled={loading} />
-              <input type="password" placeholder="Password" value={password}
-                onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key==="Enter"&&handleSubmit()} disabled={loading} />
-              <button onClick={handleSubmit} disabled={loading}>
-                {loading ? "⏳ Logging in..." : "Login"}
-              </button>
-              <p style={{ textAlign:"center", margin:"8px 0 0" }}>
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', color: '#ef4444', fontSize: '13px', marginBottom: '14px', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
+
+        <div className="form-container">
+
+          {/* LOGIN */}
+          {mode === "login" && (
+            <>
+              <input type="text"     placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} disabled={loading} />
+              <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} disabled={loading} />
+              <button onClick={handleLogin} disabled={loading}>{loading ? "⏳ Logging in..." : "Login"}</button>
+              <p style={{ textAlign: "center", marginTop: "6px" }}>
                 <span className="toggle-link" onClick={() => setMode("forgot")}>🔑 Forgot Password?</span>
               </p>
               <p className="toggle-form">
                 <span className="toggle-link" onClick={() => setMode("register")}>New user? Register here</span>
               </p>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        {/* REGISTER */}
-        {mode === "register" && (
-          <>
-            <h2>Register</h2>
-            <div className="form-container">
-              <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} disabled={loading} />
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} />
+          {/* REGISTER */}
+          {mode === "register" && (
+            <>
+              <input type="text"     placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} disabled={loading} />
+              <input type="email"    placeholder="Email"    value={email}    onChange={e => setEmail(e.target.value)}    disabled={loading} />
               <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} />
-              <button onClick={handleSubmit} disabled={loading}>{loading ? "⏳ Registering..." : "Register"}</button>
+              <button onClick={handleRegister} disabled={loading}>{loading ? "⏳ Registering..." : "Register"}</button>
               <p className="toggle-form">
                 <span className="toggle-link" onClick={() => setMode("login")}>Already registered? Login</span>
               </p>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        {/* FORGOT — Enter Email */}
-        {mode === "forgot" && (
-          <>
-            <h2>🔑 Forgot Password</h2>
-            <div className="form-container">
-              <p style={{ color:"#94a3b8", fontSize:"13px", textAlign:"center", marginBottom:"12px" }}>
-                Registered email daalo — OTP bhejenge!
-              </p>
-              <input type="email" placeholder="Registered Email" value={fpEmail}
-                onChange={e => setFpEmail(e.target.value)} disabled={loading} />
-              <button onClick={handleSendOtp} disabled={loading}>
-                {loading ? "⏳ Sending OTP..." : "📧 Send OTP"}
-              </button>
-              <p className="toggle-form">
-                <span className="toggle-link" onClick={() => setMode("login")}>← Wapas Login pe</span>
-              </p>
-            </div>
-          </>
-        )}
+          {/* FORGOT */}
+          {mode === "forgot" && (
+            <>
+              <p style={{ color: "#888", fontSize: "13px", textAlign: "center" }}>Registered email daalo — OTP bhejenge!</p>
+              <input type="email" placeholder="Registered Email" value={fpEmail} onChange={e => setFpEmail(e.target.value)} disabled={loading} />
+              <button onClick={handleSendOtp} disabled={loading}>{loading ? "⏳ Sending OTP..." : "📧 Send OTP"}</button>
+              <p className="toggle-form"><span className="toggle-link" onClick={() => setMode("login")}>← Back to Login</span></p>
+            </>
+          )}
 
-        {/* VERIFY OTP */}
-        {mode === "verify" && (
-          <>
-            <h2>✉️ Verify OTP</h2>
-            <div className="form-container">
-              <p style={{ color:"#94a3b8", fontSize:"13px", textAlign:"center", marginBottom:"12px" }}>
-                OTP bheja: <strong style={{ color:"#f97316" }}>{fpEmail}</strong>
-              </p>
+          {/* VERIFY OTP */}
+          {mode === "verify" && (
+            <>
+              <p style={{ color: "#888", fontSize: "13px", textAlign: "center" }}>OTP sent to: <strong style={{ color: "#ff6600" }}>{fpEmail}</strong></p>
               <input type="text" placeholder="6-digit OTP" value={otp} maxLength={6}
                 onChange={e => setOtp(e.target.value)} disabled={loading}
-                style={{ letterSpacing:"8px", textAlign:"center", fontSize:"20px" }} />
-              <button onClick={handleVerifyOtp} disabled={loading}>
-                {loading ? "⏳ Verifying..." : "✅ Verify OTP"}
-              </button>
-              <p style={{ textAlign:"center", margin:"8px 0 0" }}>
-                <span className="toggle-link" onClick={() => { setMode("forgot"); setOtp(""); }}>
-                  OTP nahi aaya? Dobara bhejo
-                </span>
-              </p>
-            </div>
-          </>
-        )}
+                style={{ letterSpacing: "8px", textAlign: "center", fontSize: "20px" }} />
+              <button onClick={handleVerifyOtp} disabled={loading}>{loading ? "⏳ Verifying..." : "✅ Verify OTP"}</button>
+              <p className="toggle-form"><span className="toggle-link" onClick={() => { setMode("forgot"); setOtp(""); }}>Resend OTP</span></p>
+            </>
+          )}
 
-        {/* RESET PASSWORD */}
-        {mode === "reset" && (
-          <>
-            <h2>🔒 New Password</h2>
-            <div className="form-container">
-              <input type="password" placeholder="New Password" value={newPassword}
-                onChange={e => setNewPassword(e.target.value)} disabled={loading} />
-              <input type="password" placeholder="Confirm Password" value={confirmPw}
-                onChange={e => setConfirmPw(e.target.value)} disabled={loading} />
+          {/* RESET */}
+          {mode === "reset" && (
+            <>
+              <input type="password" placeholder="New Password"     value={newPassword} onChange={e => setNewPassword(e.target.value)} disabled={loading} />
+              <input type="password" placeholder="Confirm Password" value={confirmPw}   onChange={e => setConfirmPw(e.target.value)}   disabled={loading} />
               {newPassword && (
                 <div style={{
-                  padding:"6px 12px", borderRadius:"6px", fontSize:"12px",
-                  background: newPassword.length>=8?"rgba(16,185,129,0.1)":newPassword.length>=6?"rgba(249,115,22,0.1)":"rgba(239,68,68,0.1)",
-                  color: newPassword.length>=8?"#10b981":newPassword.length>=6?"#f97316":"#ef4444"
+                  padding: "8px 12px", borderRadius: "8px", fontSize: "12px",
+                  background: newPassword.length >= 8 ? "rgba(16,185,129,0.1)" : newPassword.length >= 6 ? "rgba(255,102,0,0.1)" : "rgba(239,68,68,0.1)",
+                  color: newPassword.length >= 8 ? "#10b981" : newPassword.length >= 6 ? "#ff6600" : "#ef4444"
                 }}>
-                  Strength: {newPassword.length>=8?"Strong 💪":newPassword.length>=6?"Medium 👍":"Weak ⚠️"}
+                  Strength: {newPassword.length >= 8 ? "Strong 💪" : newPassword.length >= 6 ? "Medium 👍" : "Weak ⚠️"}
                 </div>
               )}
-              <button onClick={handleResetPassword} disabled={loading}>
-                {loading ? "⏳ Resetting..." : "🔒 Reset Password"}
-              </button>
-            </div>
-          </>
-        )}
+              <button onClick={handleResetPassword} disabled={loading}>{loading ? "⏳ Resetting..." : "🔒 Reset Password"}</button>
+            </>
+          )}
 
+        </div>
       </div>
     </div>
   );

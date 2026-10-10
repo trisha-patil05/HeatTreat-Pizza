@@ -1,135 +1,113 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function OurStory() {
-  const [counters, setCounters] = useState({ pizzas: 0, cities: 0, team: 0 });
+  const navigate = useNavigate();
+
   const observerRef = useRef(null);
-
-  // Counter animation
-  useEffect(() => {
-    const target = { pizzas: 5000, cities: 25, team: 50 };
-    const step = { pizzas: 50, cities: 1, team: 1 };
-    const interval = setInterval(() => {
-      setCounters(prev => ({
-        pizzas: Math.min(prev.pizzas + step.pizzas, target.pizzas),
-        cities: Math.min(prev.cities + step.cities, target.cities),
-        team: Math.min(prev.team + step.team, target.team),
-      }));
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Scroll animations
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }),
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }),
       { threshold: 0.15 }
     );
     document.querySelectorAll(".animate-section").forEach(el => observerRef.current.observe(el));
     return () => observerRef.current?.disconnect();
   }, []);
 
-  const timeline = [
-    { year: "2018", title: "The Beginning", desc: "HeatTreat started from a small home kitchen with one recipe and a big dream." },
-    { year: "2019", title: "First Outlet", desc: "Opened our first physical outlet in Surat — crowds lined up from day one." },
-    { year: "2021", title: "Online Ordering", desc: "Launched our digital platform so fans could order from anywhere, anytime." },
-    { year: "2023", title: "25 Cities", desc: "Expanded to 25 cities across India with 50+ passionate team members." },
-    { year: "2025", title: "5000+ Pizzas", desc: "Served over 5000 happy customers and still growing strong." },
-  ];
-
   return (
-    <div className="ourstory-container">
+    <div className="story-page">
 
       {/* Hero */}
-      <section className="hero-ourstory">
-        <div className="overlay"></div>
-        <div className="hero-content">
-          <h1 className="hero-title">Our Journey at HeatTreat</h1>
-          <p className="hero-subtitle">From a small kitchen to delivering happiness in every slice.</p>
+      <section className="story-hero" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)` }}>
+        <div className="story-hero-content">
+          <h1>Our Story 🍕</h1>
+          <p>From a small kitchen dream to your doorstep</p>
         </div>
       </section>
 
-      {/* Story Sections */}
-      <section className="story-section animate-section">
-        <div className="story-text">
-          <h2>How It All Began</h2>
-          <p>HeatTreat started in 2018 with a passion for authentic, fresh, and delicious pizzas. Our mission was simple – to make every pizza experience unforgettable.</p>
-        </div>
-      </section>
+      <div className="story-content">
 
-      <section className="story-section alt animate-section">
-        <div className="story-text">
-          <h2>Our Philosophy</h2>
-          <p>We believe in using the freshest ingredients, handmade dough, and secret sauces that give every pizza the perfect taste. Customer happiness drives us.</p>
+        {/* Origin */}
+        <div className="story-section animate-section">
+          <h2>🔥 How It Started</h2>
+          <p>
+            HeatTreat Pizza was born in 2020 from a simple love of great food.
+            What started as a home kitchen experiment quickly became a passion project —
+            crafting pizzas with the finest ingredients, bold flavors, and a whole lot of heart.
+            Today, we deliver that same love to your doorstep.
+          </p>
         </div>
-      </section>
 
-      {/* Timeline */}
-      <section className="timeline-section animate-section">
-        <h2 className="timeline-heading">Our Journey Timeline</h2>
-        <div className="timeline">
-          {timeline.map((item, i) => (
-            <div key={i} className={`timeline-item ${i % 2 === 0 ? 'left' : 'right'}`}>
-              <div className="timeline-card">
-                <span className="timeline-year">{item.year}</span>
-                <h4>{item.title}</h4>
-                <p>{item.desc}</p>
+        {/* Values */}
+        <div className="story-section animate-section">
+          <h2>💡 What We Stand For</h2>
+          <div className="story-values">
+            {[
+              { icon: "🌿", title: "Fresh Ingredients",  desc: "We source only the freshest produce and finest cheeses every single day."   },
+              { icon: "🔥", title: "Made with Passion",  desc: "Every pizza is crafted with care and love — never rushed, always perfect."   },
+              { icon: "🛵", title: "Fast Delivery",      desc: "Hot pizza at your door in 30 minutes or less. Always."                        },
+              { icon: "🧀", title: "Bold Flavors",       desc: "From classic margherita to spicy specials — there's a pizza for every mood." },
+              { icon: "💚", title: "Community First",    desc: "We give back to our community and support local farmers and suppliers."        },
+              { icon: "⭐", title: "Customer Delight",   desc: "Your satisfaction is our biggest reward. Every order, every time."             },
+            ].map((v, i) => (
+              <div className="story-value-card" key={i}>
+                <span>{v.icon}</span>
+                <h4>{v.title}</h4>
+                <p>{v.desc}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </section>
 
-      {/* Counters */}
-      <section className="counters-section animate-section">
-        <div className="counter">
-          <h3>{counters.pizzas}+</h3>
-          <p>Pizzas Served</p>
+        {/* Timeline */}
+        <div className="story-section animate-section">
+          <h2>📅 Our Journey</h2>
+          <div className="story-timeline">
+            {[
+              { year: "2020", text: "Started from a home kitchen — first 10 customers were family and friends." },
+              { year: "2021", text: "Opened our first outlet in Surat. 500+ orders in the first month!"         },
+              { year: "2022", text: "Launched our online ordering platform — making pizza even more accessible."  },
+              { year: "2023", text: "Expanded to 4 cities — Surat, Ahmedabad, Indore and Mumbai."                },
+              { year: "2024", text: "10,000+ happy customers and counting. Thank you for the love! 🙏"           },
+            ].map((t, i) => (
+              <div className="timeline-item" key={i}>
+                <div className="timeline-year">{t.year}</div>
+                <div className="timeline-text">{t.text}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="counter">
-          <h3>{counters.cities}</h3>
-          <p>Cities Delivered</p>
-        </div>
-        <div className="counter">
-          <h3>{counters.team}+</h3>
-          <p>Team Members</p>
-        </div>
-      </section>
 
-      {/* Team */}
-      <section className="team-section animate-section">
-        <h2>Meet Our Team</h2>
-        <div className="team-grid">
-          {[
-            { name: "Rohit Sharma", role: "Head Chef", emoji: "👨‍🍳" },
-            { name: "Anita Patel", role: "Co-Founder", emoji: "👩‍💼" },
-            { name: "Vikram Desai", role: "Operations Head", emoji: "👨‍💼" },
-          ].map((member, i) => (
-            <div key={i} className="team-card">
-              <div className="team-emoji">{member.emoji}</div>
-              <h4>{member.name}</h4>
-              <p>{member.role}</p>
-            </div>
-          ))}
+        {/* Team */}
+        <div className="story-section animate-section">
+          <h2>👨‍🍳 Meet the Team</h2>
+          <div className="story-team">
+            {[
+              { avatar: "👨‍🍳", name: "Rahul Sharma",  role: "Head Chef & Founder"    },
+              { avatar: "👩‍💼", name: "Priya Patel",   role: "Operations Manager"      },
+              { avatar: "👨‍💻", name: "Aman Verma",    role: "Tech & Delivery Lead"    },
+              { avatar: "👩‍🍳", name: "Sneha Joshi",   role: "Recipe Developer"        },
+            ].map((m, i) => (
+              <div className="team-card" key={i}>
+                <div className="team-avatar">{m.avatar}</div>
+                <div className="team-name">{m.name}</div>
+                <div className="team-role">{m.role}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </section>
 
-      {/* Social Media */}
-      <section className="social-section animate-section">
-        <h2>Follow Us</h2>
-        <p>Stay connected for deals, updates and pizza love 🍕</p>
-        <div className="social-links">
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" className="social-btn instagram">📸 Instagram</a>
-          <a href="https://facebook.com" target="_blank" rel="noreferrer" className="social-btn facebook">📘 Facebook</a>
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" className="social-btn twitter">🐦 Twitter</a>
+        {/* CTA */}
+        <div className="story-section animate-section" style={{ textAlign: "center" }}>
+          <h2>🍕 Ready to Order?</h2>
+          <p style={{ color: "#bbb", marginBottom: "24px" }}>Join thousands of happy customers — your perfect pizza is just a click away.</p>
+          <button className="btn-primary" style={{ padding: "14px 32px", fontSize: "16px" }}
+            onClick={() => navigate("/home")}>
+            Explore Our Menu
+          </button>
         </div>
-      </section>
 
-      {/* CTA */}
-      <section className="story-cta animate-section">
-        <h2>Ready for a Slice of Happiness?</h2>
-        <a href="/home" className="cta-button">Order Your Pizza</a>
-      </section>
-
+      </div>
     </div>
   );
 }

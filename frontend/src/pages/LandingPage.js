@@ -4,54 +4,41 @@ import { Link, useNavigate } from "react-router-dom";
 export default function LandingPage() {
   const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState("");
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-  const [toast, setToast] = useState("");
+  const [email, setEmail]               = useState("");
+  const [subscribed, setSubscribed]     = useState(false);
+  const [toast, setToast]               = useState("");
+  const [menuOpen, setMenuOpen]         = useState(false);
 
   const popularPizzas = [
-    { name: "Cheese Burst", price: "₹299", img: "/pizzas/29.jpg", mood: "cheesy" },
-    { name: "Peri Peri Veg", price: "₹349", img: "/pizzas/30.jpg", mood: "spicy" },
-    { name: "Paneer Tandoori", price: "₹399", img: "/pizzas/31.jpg", mood: "tangy" },
-    { name: "Garlic Lovers", price: "₹369", img: "/pizzas/32.jpg", mood: "garlicy" },
-    { name: "Margherita", price: "₹279", img: "/pizzas/1.jpeg", mood: "cheesy" },
+    { name: "Cheese Burst",    price: "₹299", img: "/pizzas/29.jpg",  mood: "cheesy"  },
+    { name: "Peri Peri Veg",   price: "₹349", img: "/pizzas/30.jpg",  mood: "spicy"   },
+    { name: "Paneer Tandoori", price: "₹399", img: "/pizzas/31.jpg",  mood: "tangy"   },
+    { name: "Garlic Lovers",   price: "₹369", img: "/pizzas/32.jpg",  mood: "garlicy" },
+    { name: "Margherita",      price: "₹279", img: "/pizzas/1.jpeg",  mood: "cheesy"  },
   ];
 
   const testimonials = [
-    { text: "Best pizza in town! Crust was perfect and delivery was quick!", name: "Riya Shah" },
-    { text: "Love their Peri Peri flavor! Totally recommend HeatTreat!", name: "Aryan Mehta" },
+    { text: "Best pizza in town! Crust was perfect and delivery was quick!", name: "Riya Shah"   },
+    { text: "Love their Peri Peri flavor! Totally recommend HeatTreat!",    name: "Aryan Mehta" },
   ];
 
-  const filteredPizzas =
-    selectedMood === ""
-      ? popularPizzas
-      : popularPizzas.filter((pizza) => pizza.mood === selectedMood);
+  const filteredPizzas = selectedMood === ""
+    ? popularPizzas
+    : popularPizzas.filter((pizza) => pizza.mood === selectedMood);
 
-  // Scroll animation
   const observerRef = useRef(null);
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-          }
-        });
-      },
+      (entries) => entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      }),
       { threshold: 0.15 }
     );
-
-    document.querySelectorAll(".animate-section").forEach((el) => {
-      observerRef.current.observe(el);
-    });
-
+    document.querySelectorAll(".animate-section").forEach((el) => observerRef.current.observe(el));
     return () => observerRef.current?.disconnect();
   }, []);
 
-  // Toast helper
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  };
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
   const handleNewsletter = (e) => {
     e.preventDefault();
@@ -64,10 +51,47 @@ export default function LandingPage() {
   return (
     <div className="landing-container">
 
-      {/* Toast */}
       {toast && <div className="toast">{toast}</div>}
 
-      {/* Hero */}
+      {/* ✅ LANDING NAVBAR */}
+      <header className="landing-navbar">
+        <h1 className="landing-logo" onClick={() => navigate("/")}>
+          🍕 HeatTreat Pizza
+        </h1>
+
+        {/* Desktop links */}
+        <nav className="landing-nav-links">
+          <Link to="/story">Our Story</Link>
+          <Link to="/contact">Contact</Link>
+          <button className="landing-login-btn" onClick={() => navigate("/login")}>
+            Login
+          </button>
+        </nav>
+
+        {/* Mobile hamburger */}
+        <button
+          className="landing-hamburger"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? "✕" : "☰"}
+        </button>
+
+        {/* Mobile dropdown */}
+        {menuOpen && (
+          <div className="landing-mobile-menu">
+            <Link to="/story"   onClick={() => setMenuOpen(false)}>Our Story</Link>
+            <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
+            <button
+              className="landing-login-btn"
+              onClick={() => { navigate("/login"); setMenuOpen(false); }}
+            >
+              Login
+            </button>
+          </div>
+        )}
+      </header>
+
+      {/* HERO */}
       <section
         className="hero"
         style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/background/background2.jpg)` }}
@@ -89,24 +113,24 @@ export default function LandingPage() {
               <option>Main Branch</option>
               <option>Central Mall</option>
             </select>
-            <button className="find-food-btn" onClick={() => navigate("/home")}>
+            <button className="find-food-btn" onClick={() => navigate("/login")}>
               Explore Menu
             </button>
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* FEATURES */}
       <section className="features animate-section">
         <h3>From Oven to Your Door</h3>
         <div className="feature-grid">
           {[
-            { icon: "📍", title: "Select Location", desc: "Choose your city and nearest HeatTreat outlet." },
-            { icon: "🍕", title: "Choose Your Pizza", desc: "Pick from classic, spicy, or chef's special pizzas." },
-            { icon: "🧀", title: "Customize Toppings", desc: "Add cheese, veggies, sauces and make it perfect." },
-            { icon: "💳", title: "Pay Securely", desc: "Fast and safe payment with all digital methods." },
-            { icon: "🔥", title: "Freshly Baked", desc: "Your pizza is prepared hot and fresh by our chefs." },
-            { icon: "🛵", title: "Delivered Fast", desc: "Cheesy, hot and delicious at your doorstep." },
+            { icon: "📍", title: "Select Location",    desc: "Choose your city and nearest HeatTreat outlet."     },
+            { icon: "🍕", title: "Choose Your Pizza",  desc: "Pick from classic, spicy, or chef's special pizzas." },
+            { icon: "🧀", title: "Customize Toppings", desc: "Add cheese, veggies, sauces and make it perfect."    },
+            { icon: "💳", title: "Pay Securely",       desc: "Fast and safe payment with all digital methods."     },
+            { icon: "🔥", title: "Freshly Baked",      desc: "Your pizza is prepared hot and fresh by our chefs."  },
+            { icon: "🛵", title: "Delivered Fast",     desc: "Cheesy, hot and delicious at your doorstep."         },
           ].map((f, i) => (
             <div className="feature-card" key={i}>
               <span>{f.icon}</span>
@@ -117,7 +141,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Mood Picker */}
+      {/* MOOD PICKER */}
       <section className="popular-mood animate-section" id="menu">
         <h3>Choose Your Craving 😋</h3>
         <div className="mood-buttons">
@@ -136,7 +160,7 @@ export default function LandingPage() {
         </div>
 
         <div className="featured-banner">
-          <h4>Chef's Pick</h4>
+          <h4>⭐ Chef's Pick</h4>
           <p>Try our signature Paneer Tandoori with smoky sauce and extra cheese.</p>
         </div>
 
@@ -145,14 +169,14 @@ export default function LandingPage() {
             <div
               key={i}
               className={`pizza-card ${i === 0 ? "featured-card" : ""}`}
-              onClick={() => navigate("/home", { state: { pizza } })}
+              onClick={() => navigate("/login")}
             >
               <img src={pizza.img} alt={pizza.name} />
               <h4>{pizza.name}</h4>
               <p>{pizza.price}</p>
               <button
                 className="order-btn"
-                onClick={(e) => { e.stopPropagation(); navigate("/login", { state: { pizza } }); }}
+                onClick={(e) => { e.stopPropagation(); navigate("/login"); }}
               >
                 Order Now
               </button>
@@ -161,9 +185,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* TESTIMONIALS */}
       <section className="testimonials animate-section">
-        <h3>Loved by Pizza Fans</h3>
+        <h3>Loved by Pizza Fans ❤️</h3>
         <div className="review-grid">
           {testimonials.map((review, i) => (
             <div key={i} className="review">
@@ -174,7 +198,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* NEWSLETTER */}
       <section className="newsletter-section animate-section">
         <div className="newsletter-box">
           <h3>🍕 Get Exclusive Deals!</h3>
@@ -196,34 +220,37 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* FOOTER */}
       <footer className="footer">
         <div className="footer-container">
           <div className="footer-sections">
             <div className="footer-section">
-              <h4>About Us</h4>
-              <ul><li><Link to="/story">Our Story</Link></li></ul>
+              <h4>HeatTreat Pizza</h4>
+              <ul>
+                <li><Link to="/story">Our Story</Link></li>
+                <li><Link to="/contact">Contact Us</Link></li>
+              </ul>
             </div>
             <div className="footer-section">
               <h4>Contact</h4>
               <ul>
-                <li>Email: support@heattreat.com</li>
-                <li>Phone: +91 9876543210</li>
-                <li><Link to="/contact">Contact Form</Link></li>
+                <li>support@heattreat.com</li>
+                <li>+91 9876543210</li>
               </ul>
             </div>
             <div className="footer-section">
-              <h4>Delivery Locations</h4>
+              <h4>Delivery Cities</h4>
               <ul>
                 <li>Surat</li><li>Ahmedabad</li><li>Indore</li><li>Mumbai</li>
               </ul>
             </div>
           </div>
           <div className="footer-bottom">
-            <p>© 2025 HeatTreat Pizza | Made with ❤️ & 🍕</p>
+            <p>© 2025 HeatTreat Pizza — Made with ❤️ & 🍕</p>
           </div>
         </div>
       </footer>
+
     </div>
   );
 }

@@ -1,490 +1,398 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/client";
-import { useAuth } from "../context/AuthContext";
 
-const TABS = ["Overview", "Analytics", "Pizzas", "Orders", "Users"];
+const TABS = ["Overview", "Pizzas", "Orders", "Users"];
 
 const initialPizzas = [
-  { id: 1, name: "Margherita",   price: 200, category: "Veg",     available: true },
-  { id: 2, name: "Pepperoni",    price: 250, category: "Non-Veg", available: true },
-  { id: 3, name: "Paneer Tikka", price: 260, category: "Veg",     available: true },
+  { id: 1, name: "Margherita",   price: 200, category: "Veg",     available: true  },
+  { id: 2, name: "Pepperoni",    price: 250, category: "Non-Veg", available: true  },
+  { id: 3, name: "Paneer Tikka", price: 260, category: "Veg",     available: true  },
   { id: 4, name: "BBQ Chicken",  price: 270, category: "Non-Veg", available: false },
-  { id: 5, name: "Four Cheese",  price: 280, category: "Veg",     available: true },
+  { id: 5, name: "Four Cheese",  price: 280, category: "Veg",     available: true  },
 ];
 
-const statusColors = {
-  "Delivered":          "#66cc66",
-  "Preparing":          "#ffaa00",
-  "Out for Delivery":   "#00aaff",
-  "Pending":            "#ff4444",
-  "Placed":             "#aa66ff",
-  "Cancelled":          "#ff4444",
+const STATUS_COLORS = {
+  Placed:              "#a78bfa",
+  Preparing:           "#ff6600",
+  "Out for Delivery":  "#3b82f6",
+  Delivered:           "#10b981",
+  Cancelled:           "#ef4444",
 };
 
-// ── Bar Chart ──
-function BarChart({ data, valueKey, labelKey, color = "#ff6600", title }) {
-  const max = Math.max(...data.map(d => d[valueKey]), 1);
-  return (
-    <div className="chart-wrapper">
-      <p className="chart-title">{title}</p>
-      <div className="bar-chart">
-        {data.map((item, i) => (
-          <div key={i} className="bar-col">
-            <div className="bar-value">{item[valueKey]}</div>
-            <div className="bar" style={{ height: `${Math.max((item[valueKey] / max) * 140, 4)}px`, background: color }} />
-            <div className="bar-label">{item[labelKey]}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+export default function AdminDashboard() {
+  const navigate  = useNavigate();
+  const getUser   = () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } };
+  const getToken  = () => localStorage.getItem('token');
 
-// ── Donut Chart ──
-function DonutChart({ data, title }) {
-  const total  = data.reduce((s, d) => s + d.value, 0) || 1;
-  const colors = ["#ff6600", "#66cc66", "#00aaff", "#ffaa00", "#cc44cc"];
-  let cum = 0;
-  const segments = data.map((item, i) => {
-    const pct = (item.value / total) * 100;
-    const start = cum; cum += pct;
-    return { ...item, pct, start, color: colors[i % colors.length] };
-  });
-  const grad = segments.map(s => `${s.color} ${s.start}% ${s.start + s.pct}%`).join(", ");
+  const [activeTab, setActiveTab]   = useState("Overview");
+  const [pizzas, setPizzas]         = useState(initialPizzas);
+  const [newPizza, setNewPizza]     = useState({ name: "", price: "", category: "Veg" });
+  const [showForm, setShowForm]     = useState(false);
+  const [toast, setToast]           = useState("");
 
-  return (
-    <div className="donut-wrapper">
-      <p className="chart-title">{title}</p>
-      <div className="donut-chart-row">
-        <div className="donut" style={{ background: `conic-gradient(${grad})` }}>
-          <div className="donut-hole"><span>{total}</span><small>total</small></div>
-        </div>
-        <div className="donut-legend">
-          {segments.map((s, i) => (
-            <div key={i} className="legend-item">
-              <span className="legend-dot" style={{ background: s.color }} />
-              <span className="legend-label">{s.label}</span>
-              <span className="legend-val">{s.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AdminDashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const [activeTab, setActiveTab]       = useState("Overview");
-  const [pizzas, setPizzas]             = useState(initialPizzas);
-  const [newPizza, setNewPizza]         = useState({ name: "", price: "", category: "Veg" });
-  const [showAddForm, setShowAddForm]   = useState(false);
-  const [toast, setToast]               = useState("");
-
-  // ✅ Real orders from MongoDB
-  const [realOrders, setRealOrders]     = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-
-  // ✅ Real users from MongoDB
-  const [realUsers, setRealUsers]       = useState([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-
-  // Analytics
-  const [analytics, setAnalytics]       = useState(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [orders, setOrders]         = useState([]);
+  const [ordersLoading, setOL]      = useState(false);
+  const [users, setUsers]           = useState([]);
+  const [usersLoading, setUL]       = useState(false);
+  const [stats, setStats]           = useState({ revenue: 0, total: 0, pending: 0, users: 0 });
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
-  // ── Fetch Analytics ──
-  const fetchAnalytics = useCallback(async () => {
-    setAnalyticsLoading(true);
-    try {
-      const { data } = await api.get("/orders/analytics");
-      setAnalytics(data);
-    } catch (err) {
-      console.error("Analytics error:", err);
-      setAnalytics({
-        totalRevenue: 0, totalOrders: 0, totalUsers: 0, pendingOrders: 0,
-        statusBreakdown: { Placed: 0, Preparing: 0, "Out for Delivery": 0, Delivered: 0, Cancelled: 0 },
-        paymentBreakdown: { cash: 0, card: 0, upi: 0 },
-        last7Days: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => ({ date: d, orders: 0, revenue: 0 })),
-        topPizzas: [], recentOrders: [],
-      });
-    } finally { setAnalyticsLoading(false); }
-  }, []);
-
-  // ✅ Fetch Real Orders from MongoDB
   const fetchOrders = useCallback(async () => {
-    setOrdersLoading(true);
+    setOL(true);
     try {
-      const { data } = await api.get("/orders/all");
-      setRealOrders(data.orders || []);
-    } catch (err) {
-      console.error("Orders fetch error:", err);
-    } finally { setOrdersLoading(false); }
+      const res  = await fetch("http://localhost:5000/api/orders/all", { headers: { Authorization: `Bearer ${getToken()}` } });
+      const data = await res.json();
+      const list = data.orders || [];
+      setOrders(list);
+      setStats({
+        revenue: list.filter(o => o.status === "Delivered").reduce((s, o) => s + o.totalAmount, 0),
+        total:   list.length,
+        pending: list.filter(o => !["Delivered","Cancelled"].includes(o.status)).length,
+        users:   stats.users
+      });
+    } catch (e) { console.error(e); }
+    finally { setOL(false); }
   }, []);
 
-  // ✅ Fetch Real Users from MongoDB
   const fetchUsers = useCallback(async () => {
-    setUsersLoading(true);
+    setUL(true);
     try {
-      const { data } = await api.get("/auth/users");
-      setRealUsers(data.users || []);
-    } catch (err) {
-      console.error("Users fetch error:", err);
-    } finally { setUsersLoading(false); }
+      const res  = await fetch("http://localhost:5000/api/auth/users", { headers: { Authorization: `Bearer ${getToken()}` } });
+      const data = await res.json();
+      setUsers(data.users || []);
+      setStats(s => ({ ...s, users: (data.users || []).length }));
+    } catch (e) { console.error(e); }
+    finally { setUL(false); }
   }, []);
 
   useEffect(() => {
-    if (activeTab === "Overview" || activeTab === "Analytics") fetchAnalytics();
-    if (activeTab === "Orders")  fetchOrders();
-    if (activeTab === "Users")   fetchUsers();
-  }, [activeTab, fetchAnalytics, fetchOrders, fetchUsers]);
+    if (activeTab === "Overview" || activeTab === "Orders") fetchOrders();
+    if (activeTab === "Overview" || activeTab === "Users")  fetchUsers();
+  }, [activeTab]);
 
-  // ✅ Update order status in MongoDB
-  const handleUpdateOrderStatus = async (orderId, status) => {
+  const updateStatus = async (id, status) => {
     try {
-      await api.patch(`/orders/${orderId}/status`, { status });
-      setRealOrders(prev => prev.map(o => o._id === orderId ? { ...o, status } : o));
-      showToast(`✅ Order status updated!`);
-    } catch (err) {
-      showToast("❌ Update failed");
-    }
+      await fetch(`http://localhost:5000/api/orders/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ status })
+      });
+      setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
+      showToast("✅ Status updated!");
+    } catch { showToast("❌ Update failed"); }
   };
 
-  const handleDeletePizza    = (id) => { setPizzas(prev => prev.filter(p => p.id !== id)); showToast("🗑️ Pizza removed!"); };
-  const handleToggleAvailable = (id) => setPizzas(prev => prev.map(p => p.id === id ? { ...p, available: !p.available } : p));
-
   const handleAddPizza = () => {
-    if (!newPizza.name || !newPizza.price) { showToast("⚠️ Please fill all fields"); return; }
-    setPizzas(prev => [...prev, { id: Date.now(), name: newPizza.name, price: parseInt(newPizza.price), category: newPizza.category, available: true }]);
+    if (!newPizza.name || !newPizza.price) { showToast("⚠️ Fill all fields"); return; }
+    setPizzas(prev => [...prev, { id: Date.now(), name: newPizza.name, price: +newPizza.price, category: newPizza.category, available: true }]);
     setNewPizza({ name: "", price: "", category: "Veg" });
-    setShowAddForm(false);
+    setShowForm(false);
     showToast("✅ Pizza added!");
   };
 
-  const totalRevenue  = analytics?.totalRevenue  ?? 0;
-  const totalOrders   = analytics?.totalOrders   ?? 0;
-  const pendingOrders = analytics?.pendingOrders  ?? 0;
-  const totalUsers    = analytics?.totalUsers     ?? 0;
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('cartItems');
+    navigate('/');
+  };
+
+  const user = getUser();
 
   return (
-    <div className="admin-page">
-      {toast && <div className="toast">{toast}</div>}
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-main)", fontFamily: "var(--font)" }}>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position: "fixed", bottom: "24px", right: "24px", background: "#1a1a1a", border: "1px solid var(--orange)", color: "var(--orange)", padding: "12px 20px", borderRadius: "10px", zIndex: 9999, fontWeight: 600 }}>
+          {toast}
+        </div>
+      )}
 
       {/* Sidebar */}
-      <div className="admin-sidebar">
-        <div className="admin-logo">🍕 HeatTreat</div>
-        <p className="admin-welcome">Welcome, {user?.name || "Admin"}</p>
-        <nav className="admin-nav">
+      <aside style={{ width: "220px", background: "#0d0d0d", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh" }}>
+        <div style={{ padding: "24px 20px", borderBottom: "1px solid var(--border)" }}>
+          <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--orange)" }}>🍕 HeatTreat</div>
+          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>Admin Panel</div>
+        </div>
+
+        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px" }}>
           {TABS.map(tab => (
-            <button
-              key={tab}
-              className={`admin-nav-item ${activeTab === tab ? "active-nav" : ""}`}
+            <button key={tab}
               onClick={() => setActiveTab(tab)}
-            >
-              {tab === "Overview" ? "📊" : tab === "Analytics" ? "📈" : tab === "Pizzas" ? "🍕" : tab === "Orders" ? "📦" : "👥"} {tab}
+              style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                padding: "11px 14px", border: "none", borderRadius: "8px",
+                cursor: "pointer", fontSize: "14px", fontWeight: 500,
+                fontFamily: "var(--font)", textAlign: "left", width: "100%",
+                background: activeTab === tab ? "rgba(255,102,0,0.12)" : "transparent",
+                color: activeTab === tab ? "var(--orange)" : "var(--text-muted)",
+                transition: "all 0.2s"
+              }}>
+              {tab === "Overview" ? "📊" : tab === "Pizzas" ? "🍕" : tab === "Orders" ? "📦" : "👥"} {tab}
             </button>
           ))}
         </nav>
-        <button className="admin-logout-btn" onClick={() => { logout(); navigate("/"); }}>🚪 Logout</button>
-      </div>
 
-      {/* Main Content */}
-      <div className="admin-main">
-        <div className="admin-header">
-          <h2 className="admin-title">{activeTab}</h2>
-          <span className="admin-date">{new Date().toDateString()}</span>
+        <div style={{ padding: "16px 20px", borderTop: "1px solid var(--border)" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-white)", marginBottom: "4px" }}>{user?.name || "Admin"}</div>
+          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "12px" }}>Super Admin</div>
+          <button onClick={handleLogout}
+            style={{ width: "100%", padding: "8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "8px", color: "#ef4444", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font)" }}>
+            🚪 Logout
+          </button>
         </div>
+      </aside>
 
-        {/* ── OVERVIEW ── */}
-        {activeTab === "Overview" && (
+      {/* Main */}
+      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+
+        {/* Header */}
+        <header style={{ padding: "20px 32px", borderBottom: "1px solid var(--border)", background: "#0d0d0d", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div className="stats-grid">
-              {[
-                { icon: "💰", label: "Total Revenue",  value: `₹${totalRevenue}` },
-                { icon: "📦", label: "Total Orders",   value: totalOrders },
-                { icon: "⏳", label: "Pending Orders", value: pendingOrders },
-                { icon: "👥", label: "Total Users",    value: totalUsers },
-              ].map((s, i) => (
-                <div key={i} className="stat-card">
-                  <div className="stat-icon">{s.icon}</div>
-                  <div><p className="stat-label">{s.label}</p><h3 className="stat-value">{s.value}</h3></div>
-                </div>
-              ))}
-            </div>
-
-            {analytics?.last7Days && (
-              <div className="admin-section">
-                <BarChart data={analytics.last7Days} valueKey="orders" labelKey="date" title="📦 Orders — Last 7 Days" />
-              </div>
-            )}
-
-            <div className="admin-section">
-              <h3 className="section-heading">Recent Orders</h3>
-              <div className="admin-table-wrapper">
-                <table className="admin-table">
-                  <thead><tr><th>Order ID</th><th>User</th><th>Total</th><th>Status</th><th>Time</th></tr></thead>
-                  <tbody>
-                    {(analytics?.recentOrders || []).map((order, i) => (
-                      <tr key={i}>
-                        <td style={{ color: "var(--orange)" }}>#{order.id}</td>
-                        <td>{order.user}</td>
-                        <td>₹{order.total}</td>
-                        <td>
-                          <span className="status-badge" style={{ background: (statusColors[order.status] || "#888") + "22", color: statusColors[order.status] || "#888", border: `1px solid ${statusColors[order.status] || "#888"}` }}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td>{order.time}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <h2 style={{ color: "var(--text-white)", fontSize: "1.3rem", fontWeight: 700 }}>
+              {activeTab === "Overview" ? "📊" : activeTab === "Pizzas" ? "🍕" : activeTab === "Orders" ? "📦" : "👥"} {activeTab}
+            </h2>
+            <p style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "2px" }}>
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
           </div>
-        )}
+        </header>
 
-        {/* ── ANALYTICS ── */}
-        {activeTab === "Analytics" && (
-          <div>
-            {analyticsLoading ? (
-              <div style={{ textAlign: "center", padding: "60px", color: "var(--orange)", fontSize: "1.2rem" }}>📊 Loading analytics...</div>
-            ) : analytics ? (
-              <>
-                <div className="stats-grid" style={{ marginBottom: "24px" }}>
-                  {[
-                    { icon: "💰", label: "Total Revenue", value: `₹${analytics.totalRevenue}` },
-                    { icon: "📦", label: "Total Orders",  value: analytics.totalOrders },
-                    { icon: "👥", label: "Total Users",   value: analytics.totalUsers },
-                    { icon: "⏳", label: "Pending",       value: analytics.pendingOrders },
-                  ].map((s, i) => (
-                    <div key={i} className="stat-card">
-                      <div className="stat-icon">{s.icon}</div>
-                      <div><p className="stat-label">{s.label}</p><h3 className="stat-value">{s.value}</h3></div>
+        <div style={{ padding: "28px 32px", flex: 1 }}>
+
+          {/* ── OVERVIEW ── */}
+          {activeTab === "Overview" && (
+            <div>
+              {/* Stats */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px", marginBottom: "28px" }}>
+                {[
+                  { icon: "💰", label: "Revenue",       value: `₹${stats.revenue}`, color: "#10b981" },
+                  { icon: "📦", label: "Total Orders",  value: stats.total,          color: "#3b82f6" },
+                  { icon: "⏳", label: "Active Orders", value: stats.pending,         color: "var(--orange)" },
+                  { icon: "👥", label: "Total Users",   value: stats.users,           color: "#a78bfa" },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px", display: "flex", alignItems: "center", gap: "14px", borderTop: `3px solid ${s.color}` }}>
+                    <span style={{ fontSize: "28px" }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-white)" }}>{s.value}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>{s.label}</div>
                     </div>
-                  ))}
-                </div>
-
-                <div className="charts-row">
-                  <div className="admin-section chart-section">
-                    <BarChart data={analytics.last7Days} valueKey="orders" labelKey="date" color="#ff6600" title="📦 Orders — Last 7 Days" />
                   </div>
-                  <div className="admin-section chart-section">
-                    <BarChart data={analytics.last7Days} valueKey="revenue" labelKey="date" color="#66cc66" title="💰 Revenue — Last 7 Days (₹)" />
-                  </div>
-                </div>
-
-                <div className="charts-row">
-                  <div className="admin-section chart-section">
-                    <DonutChart title="📊 Order Status" data={Object.entries(analytics.statusBreakdown).map(([label, value]) => ({ label, value }))} />
-                  </div>
-                  <div className="admin-section chart-section">
-                    <DonutChart title="💳 Payment Methods" data={[
-                      { label: "Cash", value: analytics.paymentBreakdown.cash },
-                      { label: "Card", value: analytics.paymentBreakdown.card },
-                      { label: "UPI",  value: analytics.paymentBreakdown.upi },
-                    ]} />
-                  </div>
-                </div>
-
-                {analytics.topPizzas?.length > 0 && (
-                  <div className="admin-section">
-                    <BarChart data={analytics.topPizzas} valueKey="count" labelKey="name" color="#aa66ff" title="🍕 Top Selling Pizzas" />
-                  </div>
-                )}
-              </>
-            ) : (
-              <p style={{ color: "var(--text-muted)", textAlign: "center" }}>No analytics data.</p>
-            )}
-          </div>
-        )}
-
-        {/* ── PIZZAS ── */}
-        {activeTab === "Pizzas" && (
-          <div className="admin-section">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 className="section-heading" style={{ margin: 0 }}>Pizza Menu</h3>
-              <button className="btn-primary" onClick={() => setShowAddForm(!showAddForm)}>
-                {showAddForm ? "✕ Cancel" : "+ Add Pizza"}
-              </button>
-            </div>
-
-            {showAddForm && (
-              <div className="add-pizza-form">
-                <h4 style={{ color: "var(--orange)", marginBottom: "16px" }}>Add New Pizza</h4>
-                <div className="admin-form-row">
-                  <div className="input-group">
-                    <label className="input-label">Pizza Name</label>
-                    <input className="input-field" type="text" placeholder="e.g. Spicy Veggie" value={newPizza.name} onChange={(e) => setNewPizza({ ...newPizza, name: e.target.value })} />
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Price (₹)</label>
-                    <input className="input-field" type="number" placeholder="e.g. 299" value={newPizza.price} onChange={(e) => setNewPizza({ ...newPizza, price: e.target.value })} />
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Category</label>
-                    <select className="input-field" value={newPizza.category} onChange={(e) => setNewPizza({ ...newPizza, category: e.target.value })}>
-                      <option>Veg</option><option>Non-Veg</option><option>Spicy</option>
-                    </select>
-                  </div>
-                </div>
-                <button className="btn-primary" onClick={handleAddPizza}>Add Pizza</button>
+                ))}
               </div>
-            )}
 
-            <div className="admin-table-wrapper">
-              <table className="admin-table">
-                <thead><tr><th>#</th><th>Name</th><th>Price</th><th>Category</th><th>Available</th><th>Actions</th></tr></thead>
-                <tbody>
-                  {pizzas.map((pizza, i) => (
-                    <tr key={pizza.id}>
-                      <td>{i + 1}</td>
-                      <td>{pizza.name}</td>
-                      <td>₹{pizza.price}</td>
-                      <td><span className="category-tag">{pizza.category}</span></td>
-                      <td>
-                        <button className={`toggle-btn ${pizza.available ? "toggle-on" : "toggle-off"}`} onClick={() => handleToggleAvailable(pizza.id)}>
-                          {pizza.available ? "✅ Available" : "❌ Unavailable"}
-                        </button>
-                      </td>
-                      <td>
-                        <button className="btn-danger" style={{ padding: "6px 14px", fontSize: "13px" }} onClick={() => handleDeletePizza(pizza.id)}>Delete</button>
-                      </td>
+              {/* Recent Orders */}
+              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px" }}>
+                <h3 style={{ color: "var(--text-white)", fontSize: "15px", fontWeight: 600, marginBottom: "16px" }}>Recent Orders</h3>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                      {["Order ID","User","Total","Status","Time"].map(h => (
+                        <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* ── ORDERS — Real MongoDB Data ── */}
-        {activeTab === "Orders" && (
-          <div className="admin-section">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 className="section-heading" style={{ margin: 0 }}>All Orders</h3>
-              <button className="btn-outline" onClick={fetchOrders} style={{ fontSize: "13px", padding: "7px 14px" }}>
-                🔄 Refresh
-              </button>
-            </div>
-
-            {ordersLoading ? (
-              <div style={{ textAlign: "center", padding: "40px", color: "var(--orange)" }}>📦 Loading orders...</div>
-            ) : realOrders.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>Koi order nahi mila.</div>
-            ) : (
-              <div className="admin-table-wrapper">
-                <table className="admin-table">
-                  <thead>
-                    <tr><th>Order ID</th><th>User</th><th>Items</th><th>Total</th><th>Date</th><th>Status</th><th>Update</th></tr>
                   </thead>
                   <tbody>
-                    {realOrders.map(order => (
-                      <tr key={order._id}>
-                        <td style={{ color: "var(--orange)", fontFamily: "monospace" }}>
-                          #{order._id.slice(-6).toUpperCase()}
-                        </td>
-                        <td>{order.user?.username || "Unknown"}</td>
-                        <td style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-                          {order.cartItems?.map(i => `${i.name} x${i.quantity}`).join(", ") || "—"}
-                        </td>
-                        <td style={{ color: "#66cc66", fontWeight: 600 }}>₹{order.totalAmount}</td>
-                        <td style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                        </td>
-                        <td>
-                          <span className="status-badge" style={{ background: (statusColors[order.status] || "#888") + "22", color: statusColors[order.status] || "#888", border: `1px solid ${statusColors[order.status] || "#888"}` }}>
-                            {order.status}
+                    {orders.slice(0, 5).map(o => (
+                      <tr key={o._id} style={{ borderBottom: "1px solid var(--border)" }}>
+                        <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "12px", color: "var(--orange)" }}>#{o._id?.slice(-6).toUpperCase()}</td>
+                        <td style={{ padding: "12px", fontSize: "13px", color: "var(--text-white)" }}>{o.user?.username || "—"}</td>
+                        <td style={{ padding: "12px", fontSize: "13px", color: "#10b981", fontWeight: 600 }}>₹{o.totalAmount}</td>
+                        <td style={{ padding: "12px" }}>
+                          <span style={{ background: (STATUS_COLORS[o.status] || "#888") + "22", color: STATUS_COLORS[o.status] || "#888", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600 }}>
+                            {o.status}
                           </span>
                         </td>
-                        <td>
-                          <select
-                            className="input-field"
-                            style={{ padding: "6px 10px", fontSize: "13px" }}
-                            value={order.status}
-                            onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                          >
-                            <option>Placed</option>
-                            <option>Preparing</option>
-                            <option>Out for Delivery</option>
-                            <option>Delivered</option>
-                            <option>Cancelled</option>
-                          </select>
+                        <td style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)" }}>
+                          {new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* ── USERS — Real MongoDB Data ── */}
-        {activeTab === "Users" && (
-          <div className="admin-section">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 className="section-heading" style={{ margin: 0 }}>
-                Registered Users {!usersLoading && `(${realUsers.length})`}
-              </h3>
-              <button className="btn-outline" onClick={fetchUsers} style={{ fontSize: "13px", padding: "7px 14px" }}>
-                🔄 Refresh
-              </button>
             </div>
+          )}
 
-            {usersLoading ? (
-              <div style={{ textAlign: "center", padding: "40px", color: "var(--orange)" }}>👥 Loading users...</div>
-            ) : realUsers.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>Koi user nahi mila.</div>
-            ) : (
-              <div className="admin-table-wrapper">
-                <table className="admin-table">
+          {/* ── PIZZAS ── */}
+          {activeTab === "Pizzas" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 style={{ color: "var(--text-white)", fontWeight: 600 }}>Pizza Menu ({pizzas.length})</h3>
+                <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+                  {showForm ? "✕ Cancel" : "+ Add Pizza"}
+                </button>
+              </div>
+
+              {showForm && (
+                <div style={{ background: "var(--bg-card)", border: "1px solid var(--orange)", borderRadius: "12px", padding: "24px", marginBottom: "20px" }}>
+                  <h4 style={{ color: "var(--orange)", marginBottom: "16px" }}>Add New Pizza</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>PIZZA NAME</label>
+                      <input className="input-field" type="text" placeholder="e.g. Spicy Veggie"
+                        value={newPizza.name} onChange={e => setNewPizza({ ...newPizza, name: e.target.value })} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>PRICE (₹)</label>
+                      <input className="input-field" type="number" placeholder="e.g. 299"
+                        value={newPizza.price} onChange={e => setNewPizza({ ...newPizza, price: e.target.value })} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>CATEGORY</label>
+                      <select className="input-field" value={newPizza.category} onChange={e => setNewPizza({ ...newPizza, category: e.target.value })}>
+                        <option>Veg</option><option>Non-Veg</option><option>Spicy</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button className="btn-primary" onClick={handleAddPizza}>Add Pizza</button>
+                </div>
+              )}
+
+              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr><th>#</th><th>Avatar</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th></tr>
+                    <tr style={{ background: "#0d0d0d" }}>
+                      {["#","Name","Price","Category","Available","Action"].map(h => (
+                        <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                      ))}
+                    </tr>
                   </thead>
                   <tbody>
-                    {realUsers.map((u, i) => (
-                      <tr key={u._id}>
-                        <td>{i + 1}</td>
-                        <td>
-                          <div style={{
-                            width: "32px", height: "32px", borderRadius: "50%",
-                            background: "var(--orange)", color: "white",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontWeight: 700, fontSize: "13px"
-                          }}>
-                            {(u.username || "U")[0].toUpperCase()}
-                          </div>
-                        </td>
-                        <td style={{ fontWeight: 600 }}>{u.username}</td>
-                        <td style={{ color: "var(--text-muted)", fontSize: "13px" }}>{u.email}</td>
-                        <td>
-                          <span className="category-tag" style={{
-                            background: u.role === "admin" ? "rgba(255,102,0,0.15)" : "rgba(100,100,100,0.15)",
-                            color: u.role === "admin" ? "var(--orange)" : "var(--text-muted)"
-                          }}>
-                            {u.role === "admin" ? "⚙️ Admin" : "👤 User"}
+                    {pizzas.map((p, i) => (
+                      <tr key={p.id} style={{ borderTop: "1px solid var(--border)" }}>
+                        <td style={{ padding: "12px 16px", color: "var(--text-muted)", fontSize: "13px" }}>{i + 1}</td>
+                        <td style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-white)", fontSize: "14px" }}>{p.name}</td>
+                        <td style={{ padding: "12px 16px", color: "var(--orange)", fontWeight: 600 }}>₹{p.price}</td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <span style={{ background: p.category === "Veg" ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: p.category === "Veg" ? "#10b981" : "#ef4444", padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600 }}>
+                            {p.category}
                           </span>
                         </td>
-                        <td style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-                          {new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        <td style={{ padding: "12px 16px" }}>
+                          <button onClick={() => setPizzas(prev => prev.map(x => x.id === p.id ? { ...x, available: !x.available } : x))}
+                            style={{ background: p.available ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: p.available ? "#10b981" : "#ef4444", border: "none", padding: "5px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: 600, fontFamily: "var(--font)" }}>
+                            {p.available ? "✅ Available" : "❌ Unavailable"}
+                          </button>
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <button className="btn-danger" style={{ padding: "6px 14px", fontSize: "12px" }}
+                            onClick={() => { setPizzas(prev => prev.filter(x => x.id !== p.id)); showToast("🗑️ Pizza removed!"); }}>
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+
+          {/* ── ORDERS ── */}
+          {activeTab === "Orders" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 style={{ color: "var(--text-white)", fontWeight: 600 }}>All Orders ({orders.length})</h3>
+                <button className="btn-outline" style={{ fontSize: "13px", padding: "7px 14px" }} onClick={fetchOrders}>🔄 Refresh</button>
+              </div>
+
+              {ordersLoading ? (
+                <div style={{ textAlign: "center", padding: "60px", color: "var(--orange)", fontSize: "1.1rem" }}>📦 Loading orders...</div>
+              ) : (
+                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ background: "#0d0d0d" }}>
+                        {["Order ID","User","Items","Total","Date","Status","Update"].map(h => (
+                          <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map(o => (
+                        <tr key={o._id} style={{ borderTop: "1px solid var(--border)" }}>
+                          <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: "12px", color: "var(--orange)" }}>#{o._id?.slice(-6).toUpperCase()}</td>
+                          <td style={{ padding: "12px 16px", fontSize: "13px", color: "var(--text-white)" }}>{o.user?.username || "—"}</td>
+                          <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--text-muted)", maxWidth: "160px" }}>
+                            {o.cartItems?.map(i => `${i.name} x${i.quantity}`).join(", ")}
+                          </td>
+                          <td style={{ padding: "12px 16px", color: "#10b981", fontWeight: 600 }}>₹{o.totalAmount}</td>
+                          <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--text-muted)" }}>
+                            {new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <span style={{ background: (STATUS_COLORS[o.status] || "#888") + "22", color: STATUS_COLORS[o.status] || "#888", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600 }}>
+                              {o.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <select className="input-field" style={{ padding: "6px 10px", fontSize: "12px", width: "auto" }}
+                              value={o.status} onChange={e => updateStatus(o._id, e.target.value)}>
+                              {Object.keys(STATUS_COLORS).map(s => <option key={s}>{s}</option>)}
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── USERS ── */}
+          {activeTab === "Users" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 style={{ color: "var(--text-white)", fontWeight: 600 }}>Registered Users ({users.length})</h3>
+                <button className="btn-outline" style={{ fontSize: "13px", padding: "7px 14px" }} onClick={fetchUsers}>🔄 Refresh</button>
+              </div>
+
+              {usersLoading ? (
+                <div style={{ textAlign: "center", padding: "60px", color: "var(--orange)", fontSize: "1.1rem" }}>👥 Loading users...</div>
+              ) : (
+                <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ background: "#0d0d0d" }}>
+                        {["#","Avatar","Username","Email","Role","Joined"].map(h => (
+                          <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u, i) => (
+                        <tr key={u._id} style={{ borderTop: "1px solid var(--border)" }}>
+                          <td style={{ padding: "12px 16px", color: "var(--text-muted)", fontSize: "13px" }}>{i + 1}</td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--orange)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "13px" }}>
+                              {(u.username || "U")[0].toUpperCase()}
+                            </div>
+                          </td>
+                          <td style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-white)", fontSize: "14px" }}>{u.username}</td>
+                          <td style={{ padding: "12px 16px", color: "var(--text-muted)", fontSize: "13px" }}>{u.email}</td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <span style={{ background: u.role === "admin" ? "rgba(255,102,0,0.15)" : "rgba(100,100,100,0.15)", color: u.role === "admin" ? "var(--orange)" : "var(--text-muted)", padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: 600 }}>
+                              {u.role === "admin" ? "⚙️ Admin" : "👤 User"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "12px 16px", color: "var(--text-muted)", fontSize: "12px" }}>
+                            {new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      </main>
     </div>
   );
 }
-
-export default AdminDashboard;

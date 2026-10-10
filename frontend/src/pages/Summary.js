@@ -12,14 +12,10 @@ function Summary() {
 
   if (!order) return (
     <div className="summary-page">
-      <div className="summary-box" style={{ textAlign: 'center', maxWidth: '400px' }}>
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧾</div>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '16px' }}>
-          Koi order nahi mila. Pehle order place karo!
-        </p>
-        <button className="btn-primary" onClick={() => navigate('/home')}>
-          🍕 Menu Dekho
-        </button>
+        <p style={{ color: '#888', marginBottom: '20px' }}>Koi order nahi mila. Pehle order place karo!</p>
+        <button className="btn-primary" onClick={() => navigate('/home')}>🍕 Menu Dekho</button>
       </div>
     </div>
   );
@@ -32,12 +28,10 @@ function Summary() {
   const paymentLabel =
     order.payment === 'cash' ? '💵 Cash on Delivery' :
     order.payment === 'card' ? '💳 Credit / Debit Card' :
-    order.payment === 'upi'  ? '📱 UPI' :
-    order.payment || 'Cash on Delivery';
+    order.payment === 'upi'  ? '📱 UPI' : order.payment || 'Cash on Delivery';
 
-  // ✅ Download receipt as .txt
   const handleDownload = () => {
-    const itemsText = order.cartItems && order.cartItems.length > 0
+    const itemsText = order.cartItems?.length > 0
       ? order.cartItems.map(i => `  • ${i.name} x${i.quantity}  =  ₹${i.price * i.quantity}`).join('\n')
       : `  • Pizza (${order.size || 'Medium'})`;
 
@@ -74,117 +68,69 @@ ${itemsText}
 
   Thank you for ordering with
   HeatTreat Pizza! 🔥
-  We hope you enjoy your meal!
-
 ══════════════════════════════════════
     `.trim();
 
     const blob = new Blob([receipt], { type: 'text/plain;charset=utf-8' });
     const url  = URL.createObjectURL(blob);
     const el   = document.createElement('a');
-    el.href    = url;
-    el.download = `HeatTreat_Receipt_${orderId}.txt`;
-    document.body.appendChild(el);
-    el.click();
-    document.body.removeChild(el);
-    URL.revokeObjectURL(url);
+    el.href = url; el.download = `HeatTreat_Receipt_${orderId}.txt`;
+    document.body.appendChild(el); el.click();
+    document.body.removeChild(el); URL.revokeObjectURL(url);
   };
 
-  // ✅ WhatsApp share
   const handleWhatsApp = () => {
-    const itemsList = order.cartItems && order.cartItems.length > 0
+    const itemsList = order.cartItems?.length > 0
       ? order.cartItems.map(i => `• ${i.name} x${i.quantity} = ₹${i.price * i.quantity}`).join('\n')
       : `• Pizza (${order.size || 'Medium'})`;
 
-    const msg = `🍕 *HeatTreat Pizza — Order Confirmed!* 🔥
-
-📋 *Order ID:* ${orderId}
-📍 *Delivery:* ${order.address || 'N/A'}
-💳 *Payment:* ${paymentLabel}
-
-🛒 *Items:*
-${itemsList}
-
-💰 *Subtotal:* ₹${subtotal}
-🧾 *GST (18%):* ₹${gst}
-✅ *Total:* ₹${grandTotal}
-
-🕐 Est. Delivery: 30–45 minutes
-Thank you for ordering! 😊`;
-
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(msg)}`,
-      '_blank'
-    );
+    const msg = `🍕 *HeatTreat Pizza — Order Confirmed!* 🔥\n\n📋 *Order ID:* ${orderId}\n📍 *Delivery:* ${order.address || 'N/A'}\n💳 *Payment:* ${paymentLabel}\n\n🛒 *Items:*\n${itemsList}\n\n✅ *Total:* ₹${grandTotal}\n\n🕐 Est. Delivery: 30–45 minutes`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   return (
     <div className="summary-page">
-      <div style={{ maxWidth: '1000px', width: '100%', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div className="summary-success-icon">🎉</div>
-          <h2 className="page-title" style={{ marginTop: '12px' }}>Order Receipt</h2>
-          <p style={{ color: 'var(--text-muted)' }}>
-            Thank you for ordering with HeatTreat Pizza!
-          </p>
+          <span className="summary-success-icon">🎉</span>
+          <h2 className="page-title" style={{ marginTop: '12px', textAlign: 'center' }}>Order Receipt</h2>
+          <p style={{ color: '#888', marginTop: '8px' }}>Thank you for ordering with HeatTreat Pizza!</p>
         </div>
 
         <div className="summary-two-col">
 
-          {/* LEFT — Order Details */}
+          {/* LEFT */}
           <div className="summary-box">
             <p className="input-label" style={{ marginBottom: '14px' }}>📋 Order Details</p>
-            <div className="summary-detail">
-              <div className="summary-row">
-                <span>Order ID</span>
-                <strong style={{ color: 'var(--orange)', fontFamily: 'monospace' }}>
-                  #{String(orderId).slice(-8).toUpperCase()}
-                </strong>
-              </div>
-              <div className="summary-row">
-                <span>Date</span>
-                <strong>{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
-              </div>
-              {order.address && (
-                <div className="summary-row">
-                  <span>Delivery Address</span>
-                  <strong style={{ maxWidth: '180px', textAlign: 'right' }}>{order.address}</strong>
-                </div>
-              )}
-              <div className="summary-row">
-                <span>Payment</span>
-                <strong>{paymentLabel}</strong>
-              </div>
-              <div className="summary-row">
-                <span>Status</span>
-                <strong style={{ color: '#10b981' }}>✅ Confirmed</strong>
-              </div>
-            </div>
 
-            {/* Items */}
-            {order.cartItems && order.cartItems.length > 0 && (
+            {[
+              { label: 'Order ID',     value: <strong style={{ color: '#ff6600', fontFamily: 'monospace' }}>#{String(orderId).slice(-8).toUpperCase()}</strong> },
+              { label: 'Date',         value: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) },
+              { label: 'Delivery To',  value: order.address },
+              { label: 'Payment',      value: paymentLabel },
+              { label: 'Status',       value: <span style={{ color: '#10b981' }}>✅ Confirmed</span> },
+            ].map((row, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid #222', fontSize: '14px', gap: '12px' }}>
+                <span style={{ color: '#888' }}>{row.label}</span>
+                <strong style={{ color: '#f0f0f0', textAlign: 'right' }}>{row.value}</strong>
+              </div>
+            ))}
+
+            {order.cartItems?.length > 0 && (
               <div style={{ marginTop: '18px' }}>
                 <p className="input-label" style={{ marginBottom: '10px' }}>🛒 Items Ordered</p>
                 {order.cartItems.map((item, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '8px 0',
-                    borderBottom: '1px solid var(--border)',
-                    color: 'var(--text-muted)',
-                    fontSize: '14px'
-                  }}>
-                    <span>{item.name} × {item.quantity}</span>
-                    <span style={{ color: 'var(--orange)', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1e1e1e', fontSize: '14px' }}>
+                    <span style={{ color: '#bbb' }}>{item.name} × {item.quantity}</span>
+                    <span style={{ color: '#ff6600', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* RIGHT — Bill + Actions */}
+          {/* RIGHT */}
           <div className="summary-box">
             <p className="input-label" style={{ marginBottom: '14px' }}>💰 Bill Summary</p>
 
@@ -198,37 +144,20 @@ Thank you for ordering! 😊`;
               🕐 Estimated Delivery: <strong>30–45 minutes</strong>
             </div>
 
-            {/* ✅ Action Buttons */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                onClick={handleDownload}
-              >
+              <button className="btn-primary" style={{ flex: 1 }} onClick={handleDownload}>
                 📄 Download Receipt
               </button>
-              <button
-                className="btn-whatsapp"
-                style={{ flex: 1 }}
-                onClick={handleWhatsApp}
-              >
-                💬 Share on WhatsApp
+              <button className="btn-whatsapp" style={{ flex: 1 }} onClick={handleWhatsApp}>
+                💬 WhatsApp
               </button>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-              <button
-                className="btn-outline"
-                style={{ flex: 1 }}
-                onClick={() => navigate('/my-orders')}
-              >
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => navigate('/my-orders')}>
                 🧾 My Orders
               </button>
-              <button
-                className="btn-outline"
-                style={{ flex: 1 }}
-                onClick={() => navigate('/home')}
-              >
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => navigate('/home')}>
                 🍕 Order More
               </button>
             </div>
