@@ -6,17 +6,17 @@ const ALL_PIZZAS = [
   { id: 2,  name: 'Pepperoni',              price: 250, category: 'Non-Veg' },
   { id: 3,  name: 'Veggie Delight',         price: 230, category: 'Veg' },
   { id: 4,  name: 'BBQ Chicken',            price: 270, category: 'Non-Veg' },
-  { id: 5,  name: 'Paneer Tikka',           price: 260, category: 'Veg,Spicy' },
+  { id: 5,  name: 'Paneer Tikka',           price: 260, category: 'Veg' },
   { id: 6,  name: 'Hawaiian',               price: 240, category: 'Non-Veg' },
   { id: 7,  name: 'Four Cheese',            price: 280, category: 'Veg' },
-  { id: 8,  name: 'Mexican Green Wave',     price: 250, category: 'Veg,Spicy' },
+  { id: 8,  name: 'Mexican Green Wave',     price: 250, category: 'Veg' },
   { id: 9,  name: 'Seafood Supreme',        price: 300, category: 'Non-Veg' },
   { id: 10, name: 'Mushroom and Truffle',   price: 320, category: 'Veg' },
-  { id: 11, name: 'Buffalo Chicken',        price: 290, category: 'Non-Veg,Spicy' },
+  { id: 11, name: 'Buffalo Chicken',        price: 290, category: 'Non-Veg' },
   { id: 12, name: 'Pesto Chicken',          price: 280, category: 'Non-Veg' },
   { id: 13, name: 'Smoked Salmon',          price: 350, category: 'Non-Veg' },
   { id: 14, name: 'Cheese and Spinach',     price: 230, category: 'Veg' },
-  { id: 15, name: 'Tandoori Chicken',       price: 270, category: 'Non-Veg,Spicy' },
+  { id: 15, name: 'Tandoori Chicken',       price: 270, category: 'Non-Veg' },
   { id: 16, name: 'Meat Lovers',            price: 330, category: 'Non-Veg' },
   { id: 17, name: 'Salami',                 price: 260, category: 'Non-Veg' },
   { id: 18, name: 'Bianca',                 price: 250, category: 'Veg' },
@@ -32,40 +32,47 @@ const ALL_PIZZAS = [
   { id: 28, name: 'Spinach and Artichoke',  price: 270, category: 'Veg' },
 ];
 
+// ✅ Safe localStorage helpers — no Context needed
+const getUser = () => {
+  try { return JSON.parse(localStorage.getItem('user')) || null; }
+  catch { return null; }
+};
+
+const getCartCount = () => {
+  try {
+    const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    return cart.reduce((s, i) => s + (i.quantity || 1), 0);
+  } catch { return 0; }
+};
+
 export default function Navbar() {
   const navigate  = useNavigate();
   const menuRef   = useRef(null);
   const searchRef = useRef(null);
 
-  const getUser = () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } }
-  const [user, setUser] = useState(getUser);
-
-  const getCartCount = () => {
-    try {
-      const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
-      return cart.reduce((s, i) => s + (i.quantity || 1), 0);
-    } catch { return 0; }
-  };
-  const [cartCount, setCartCount] = useState(getCartCount);
-
+  const [user,       setUser]       = useState(getUser);
+  const [cartCount,  setCartCount]  = useState(getCartCount);
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [results,    setResults]    = useState([]);
 
-  // Refresh user + cart on storage change
+  // ✅ Poll localStorage every 500ms — no Context needed
   useEffect(() => {
-    const handler = () => { setUser(getUser()); setCartCount(getCartCount()); };
-    window.addEventListener('storage', handler);
-    const interval = setInterval(handler, 500);
-    return () => { window.removeEventListener('storage', handler); clearInterval(interval); };
+    const interval = setInterval(() => {
+      setUser(getUser());
+      setCartCount(getCartCount());
+    }, 500);
+    return () => clearInterval(interval);
   }, []);
 
-  // Close on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
       if (menuRef.current   && !menuRef.current.contains(e.target))   setMenuOpen(false);
-      if (searchRef.current && !searchRef.current.contains(e.target)) { setSearchOpen(false); setSearchTerm(''); setResults([]); }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false); setSearchTerm(''); setResults([]);
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -74,10 +81,12 @@ export default function Navbar() {
   const handleSearch = (val) => {
     setSearchTerm(val);
     if (!val.trim()) { setResults([]); return; }
-    setResults(ALL_PIZZAS.filter(p =>
-      p.name.toLowerCase().includes(val.toLowerCase()) ||
-      p.category.toLowerCase().includes(val.toLowerCase())
-    ).slice(0, 6));
+    setResults(
+      ALL_PIZZAS.filter(p =>
+        p.name.toLowerCase().includes(val.toLowerCase()) ||
+        p.category.toLowerCase().includes(val.toLowerCase())
+      ).slice(0, 6)
+    );
   };
 
   const handleLogout = () => {
@@ -85,6 +94,7 @@ export default function Navbar() {
     localStorage.removeItem('user');
     localStorage.removeItem('cartItems');
     setUser(null);
+    setCartCount(0);
     setMenuOpen(false);
     navigate('/');
   };
@@ -112,7 +122,7 @@ export default function Navbar() {
             <Link to="/story">Our Story</Link>
             <Link to="/contact">Contact</Link>
 
-            {/* Search */}
+            {/* ✅ Search */}
             <div className="navbar-search-wrapper" ref={searchRef}>
               {searchOpen ? (
                 <div className="navbar-search-box">
@@ -125,12 +135,15 @@ export default function Navbar() {
                     onChange={e => handleSearch(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === 'Enter' && searchTerm.trim()) {
-                        navigate('/home'); setSearchOpen(false); setSearchTerm(''); setResults([]);
+                        navigate('/home');
+                        setSearchOpen(false); setSearchTerm(''); setResults([]);
                       }
                     }}
                   />
-                  <button className="navbar-search-close" onClick={() => { setSearchOpen(false); setSearchTerm(''); setResults([]); }}>✕</button>
-
+                  <button className="navbar-search-close"
+                    onClick={() => { setSearchOpen(false); setSearchTerm(''); setResults([]); }}>
+                    ✕
+                  </button>
                   {results.length > 0 && (
                     <div className="navbar-search-results">
                       {results.map(p => (
@@ -148,10 +161,9 @@ export default function Navbar() {
                       </div>
                     </div>
                   )}
-
                   {searchTerm && results.length === 0 && (
                     <div className="navbar-search-results">
-                      <div className="navbar-search-empty">😕 No pizza found for "{searchTerm}"</div>
+                      <div className="navbar-search-empty">😕 No pizza found</div>
                     </div>
                   )}
                 </div>
@@ -166,12 +178,12 @@ export default function Navbar() {
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </Link>
 
-            {/* Admin link */}
+            {/* Admin */}
             {user?.role === 'admin' && (
               <Link to="/admin-dashboard" className="admin-link">⚙️ Admin</Link>
             )}
 
-            {/* Account dropdown */}
+            {/* Account Dropdown */}
             <div className="account-menu-wrapper" ref={menuRef}>
               <button className="navbar-avatar" onClick={() => setMenuOpen(p => !p)}>
                 {(user?.name || user?.username || 'U')[0].toUpperCase()}
@@ -188,8 +200,6 @@ export default function Navbar() {
                   <div className="dropdown-item" onClick={() => go('/cart')}>
                     🛒 Cart {cartCount > 0 && `(${cartCount})`}
                   </div>
-                  <div className="dropdown-item" onClick={() => go('/profile')}>👤 My Profile</div>
-                  <div className="dropdown-item" onClick={() => go('/my-orders')}>🧾 My Orders</div>
                   <div className="dropdown-item" onClick={() => go('/story')}>📖 Our Story</div>
                   <div className="dropdown-item" onClick={() => go('/contact')}>📞 Contact</div>
                   {user?.role === 'admin' && (

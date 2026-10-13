@@ -14,7 +14,6 @@ import PizzaDetails from './pages/PizzaDetails';
 import ShoppingCart from './pages/ShoppingCart';
 import Summary from './pages/Summary';
 
-// ✅ Inpe Navbar nahi dikhega — inke apne navbars hain
 function NavbarWrapper() {
   const location = useLocation();
   const hideOn = ["/", "/login", "/admin-dashboard"];
@@ -37,18 +36,26 @@ function App() {
       <NavbarWrapper />
       <AnimatedPage>
         <Routes>
+          {/* Public */}
           <Route path="/"                element={<LandingPage />} />
           <Route path="/login"           element={<Login />} />
           <Route path="/story"           element={<OurStory />} />
           <Route path="/contact"         element={<Contact />} />
           <Route path="/banner"          element={<BannerCarousel />} />
+
+          {/* Protected */}
           <Route path="/home"            element={<HomePage />} />
           <Route path="/pizza/:id"       element={<PizzaDetails />} />
           <Route path="/cart"            element={<ShoppingCart />} />
           <Route path="/pizza-cart"      element={<PizzaCart />} />
           <Route path="/order"           element={<OrderPage />} />
           <Route path="/summary"         element={<Summary />} />
+
+          {/* Admin */}
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
+          {/* Fallback — unknown URL pe home */}
+          <Route path="*"                element={<HomePage />} />
         </Routes>
       </AnimatedPage>
     </>
