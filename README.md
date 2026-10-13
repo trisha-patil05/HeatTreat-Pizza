@@ -189,7 +189,7 @@ REACT_APP_API_URL=http://localhost:5000/api
 
 | Service | URL |
 |---|---|
-| Frontend | Coming soon on Vercel |
+| Frontend | https://heat-treat-pizza.vercel.app/ |
 | Backend | https://heattreat-backend.onrender.com |
 
 ---
