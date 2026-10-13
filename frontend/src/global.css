@@ -1627,3 +1627,29 @@ h1,h2,h3,h4,h5,h6 { margin: 0; }
   .hero-title  { font-size: 1.8rem; }
   .notfound-code { font-size: 72px; }
 }
+
+/* Contact page visibility fix */
+.contact-page,
+.contact-page .contact-container,
+.contact-page .contact-header,
+.contact-page .contact-grid,
+.contact-page .contact-form,
+.contact-page .contact-info,
+.contact-page .contact-info-card {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.contact-page {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.contact-container {
+  max-width: 900px;
+  margin: 0 auto;
+}

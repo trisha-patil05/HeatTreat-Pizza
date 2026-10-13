@@ -19,12 +19,12 @@ export default function Contact() {
       <div className="contact-container">
 
         {/* Header */}
-        <div className="contact-header animate-section">
+        <div className="contact-header">
           <h2>📞 Contact Us</h2>
           <p>Have a question or feedback? We'd love to hear from you!</p>
         </div>
 
-        <div className="contact-grid animate-section">
+        <div className="contact-grid">
 
           {/* Form */}
           <div className="contact-form">
@@ -71,7 +71,7 @@ export default function Contact() {
           </div>
 
           {/* Info */}
-          <div className="contact-info animate-section">
+          <div className="contact-info">
             {[
               { icon: "📍", title: "Our Location",    text: "123 Pizza Street, Surat, Gujarat 395001" },
               { icon: "📞", title: "Phone Number",    text: "+91 9876543210"                            },

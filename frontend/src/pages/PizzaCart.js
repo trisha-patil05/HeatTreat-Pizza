@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 
 const SIZES    = ['Small', 'Medium', 'Large'];
 const CRUSTS   = ['Thin Crust', 'Thick Crust', 'Stuffed Crust'];
@@ -12,6 +14,8 @@ const CRUST_PRICES = { 'Thin Crust': 0, 'Thick Crust': 20, 'Stuffed Crust': 50 }
 
 export default function PizzaCart() {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { showToast } = useToast();
 
   const [size,     setSize]     = useState('Medium');
   const [crust,    setCrust]    = useState('Thin Crust');
@@ -29,21 +33,30 @@ export default function PizzaCart() {
   const toggleTopping = (t) =>
     setToppings(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
 
-  const handleAddToCart = () => {
-    const item = {
-      id:       `custom-${size}-${crust}-${Date.now()}`,
-      name:     `Custom Pizza (${size})`,
-      price:    unitPrice,
-      image:    '/pizzas/1.jpeg',
-      size, crust, sauce, toppings, drink,
-      quantity: qty
-    };
-    const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
-    cart.push(item);
-    localStorage.setItem('cartItems', JSON.stringify(cart));
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+ 
+const handleAddToCart = () => {
+  const item = {
+    id: `custom-${size}-${crust}-${Date.now()}`,
+    name: `Custom Pizza (${size})`,
+    price: unitPrice,
+    image: '/pizzas/1.jpeg',
+    size,
+    crust,
+    sauce,
+    toppings,
+    drink,
   };
+
+  // Update React CartContext state
+  for (let i = 0; i < qty; i++) {
+    addToCart(item);
+  }
+
+  setAdded(true);
+  showToast('Pizza added to cart successfully!', 'success');
+
+  setTimeout(() => setAdded(false), 2000);
+};
 
   const OptionGroup = ({ label, options, selected, onSelect, prices }) => (
     <div className="pizza-option-group">
