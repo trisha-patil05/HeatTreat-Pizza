@@ -3,91 +3,80 @@
 ![MongoDB](https://img.shields.io/badge/Database-MongoDB-brightgreen)
 ![JWT](https://img.shields.io/badge/Auth-JWT-orange)
 ![Nodemailer](https://img.shields.io/badge/Email-Nodemailer-red)
-![License](https://img.shields.io/badge/Status-Active-orange)
+![Status](https://img.shields.io/badge/Status-Live-success)
 
 # 🍕 HeatTreat Pizza
 
-HeatTreat Pizza is a production-ready full-stack web application that allows users to browse pizzas, customize orders, manage a cart, and place orders seamlessly. It includes a powerful admin dashboard with real-time analytics, email notifications, JWT authentication, and much more.
+> A full-stack food ordering web application built with the MERN stack.
 
-Designed with a clean dark UI and modular architecture, the project demonstrates real-world full-stack development using the MERN stack.
+🌐 **Live Demo:** [https://heat-treat-pizza.vercel.app](https://heat-treat-pizza.vercel.app)
+🔧 **Backend API:** [https://heattreat-backend.onrender.com](https://heattreat-backend.onrender.com)
+
+---
+
+## 📸 Preview
+
+> Login → Browse 28 Pizzas → Customize → Cart → Order → Email Confirmation → Admin Dashboard
 
 ---
 
 ## 🚀 Features
 
-### 👤 Authentication & Security
+### 🔐 Authentication & Security
 - JWT-based Login & Registration
-- Protected Routes — unauthorized users redirected to login
 - Role-based Access Control — Admin vs User
-- Forgot Password with OTP via Email
-- Logout clears cart automatically (security best practice)
+- Protected Routes — unauthorized users redirected to login
+- Forgot Password with OTP via Email (Nodemailer)
+- Logout clears cart automatically
 
 ### 🍕 Pizza & Cart
-- Landing page with modern UI & banner carousel
-- Pizza listing with search, filters & sort
+- 28 pizzas with search, filter (Veg/Non-Veg/Spicy) & sort by price
 - Global Navbar search — find pizza from any page
 - Shopping cart with quantity management
-- Promo code support (HEAT10, PIZZA20)
-- Order placement with GST calculation
+- Promo code support — `HEAT10` (10% off), `PIZZA20` (20% off)
+- Build Your Own Pizza — custom size, crust, toppings, sauce, drink
 
-### 📋 Order Management
-- Order confirmation with receipt download (.txt)
+### 📦 Order Management
+- Order placement with GST (18%) calculation
+- Order confirmation screen with Order ID
+- Receipt download as `.txt` file
 - WhatsApp share — order details share karo
 - Order History — all past orders from MongoDB
-- Order progress tracker — Placed → Preparing → Out for Delivery → Delivered
+- Order progress — Placed → Preparing → Out for Delivery → Delivered
 
 ### 📧 Email Notifications
 - Order confirmation email — beautiful HTML template
 - Status update email — auto-sent when admin updates order
 - OTP email for password reset
 
-### 👤 User Profile
-- Edit name, email, phone, address
-- Change password with strength indicator
-- Order statistics — total spent, orders count
-
 ### 🧑‍💼 Admin Dashboard
-- Overview — Revenue, Orders, Users stats
-- Analytics — Bar charts + Donut charts (pure CSS, no library)
-  - Last 7 days orders & revenue
-  - Order status breakdown
-  - Payment method breakdown
-  - Top selling pizzas
-- Pizza Management — Add, Delete, Toggle availability
-- Orders Tab — Real MongoDB orders, live status update
-- Users Tab — All registered users from MongoDB
+- 📊 Overview — Revenue, Orders, Users stats
+- 🍕 Pizza Management — Add, Delete, Toggle availability
+- 📦 Orders Tab — Real MongoDB orders, live status update
+- 👥 Users Tab — All registered users from MongoDB
 
 ### 🎨 UI/UX
-- Dark theme throughout
+- Dark theme with orange accent throughout
 - Page animations — fade + slide-up on every route
 - Staggered pizza card animations
-- Toast notifications — success, error, info, warning
 - Loading states on all buttons
 - Custom 404 page with spinning pizza
-- Responsive design
+- Responsive design — mobile friendly
+- Global CSS — consistent design system
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- React.js
-- React Router DOM
-- Context API (Auth, Cart, Toast)
-- CSS (custom dark theme, animations)
-
-### Backend
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- Nodemailer (email notifications)
-
-### Other Tools
-- JWT Authentication
-- REST APIs
-- Bcryptjs (password hashing)
-- Render (backend hosting)
-- Vercel (frontend hosting)
+| Layer | Technology |
+|---|---|
+| Frontend | React.js, React Router DOM |
+| State | localStorage (no Redux needed) |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas, Mongoose |
+| Auth | JWT, bcryptjs |
+| Email | Nodemailer (Gmail) |
+| Hosting | Vercel (Frontend), Render (Backend) |
 
 ---
 
@@ -97,44 +86,42 @@ Designed with a clean dark UI and modular architecture, the project demonstrates
 react-pizza-app/
 │
 ├── backend/
-│   ├── middleware/
-│   │   └── authMiddleware.js   # JWT verify
 │   ├── models/
-│   │   ├── User.js             # User schema
-│   │   └── Order.js            # Order schema
+│   │   ├── User.js              # User schema (username, email, role)
+│   │   └── Order.js             # Order schema (cartItems, status, user ref)
 │   ├── routes/
-│   │   ├── auth.js             # Login, Register, Forgot Password
-│   │   ├── orderRoutes.js      # Orders CRUD + Analytics
-│   │   └── profileRoutes.js    # Profile update
+│   │   ├── auth.js              # Login, Register, Forgot Password, OTP
+│   │   ├── orderRoutes.js       # Place order, fetch orders, analytics
+│   │   └── profileRoutes.js     # Profile update, password change
+│   ├── middleware/
+│   │   └── authMiddleware.js    # JWT token verify
 │   ├── services/
-│   │   └── emailService.js     # Nodemailer email templates
-│   └── server.js               # Entry point
+│   │   └── emailService.js      # Nodemailer email templates
+│   └── server.js                # Express app entry point
 │
-├── frontend/
-│   └── src/
-│       ├── api/
-│       │   └── client.js       # Axios instance
-│       ├── components/
-│       │   ├── Navbar.jsx       # Global search + dropdown
-│       │   ├── ProtectedRoute.js
-│       │   └── AdminRoute.js   # Admin-only access
-│       ├── context/
-│       │   ├── AuthContext.js  # Global auth state
-│       │   ├── CartContext.js  # Cart management
-│       │   └── ToastContext.js # Toast notifications
-│       └── pages/
-│           ├── HomePage.js      # Pizza listing
-│           ├── AdminDashboard.js# Full admin panel
-│           ├── OrderHistory.js  # Past orders
-│           ├── ProfilePage.js   # User profile
-│           ├── Summary.js       # Receipt + WhatsApp
-│           ├── Login.js         # Auth + Forgot Password
-│           └── NotFound.js      # 404 page
+└── frontend/
+    └── src/
+        ├── components/
+        │   ├── Navbar.jsx        # Global navbar with search + dropdown
+        │   └── BannerCarousel.js # Hero banner slider
+        ├── pages/
+        │   ├── LandingPage.js    # Public landing page
+        │   ├── Login.js          # Login, Register, Forgot Password
+        │   ├── HomePage.js       # Pizza menu with filters
+        │   ├── PizzaDetails.js   # Customize pizza
+        │   ├── PizzaCart.js      # Build your own pizza
+        │   ├── ShoppingCart.js   # Cart with promo codes
+        │   ├── OrderPage.js      # Place order
+        │   ├── Summary.js        # Receipt + WhatsApp share
+        │   ├── OurStory.js       # About page
+        │   ├── Contact.js        # Contact form
+        │   └── AdminDashboard.js # Full admin panel
+        └── global.css            # Complete design system
 ```
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ Local Setup
 
 ### 1. Clone the Repository
 ```bash
@@ -142,34 +129,30 @@ git clone https://github.com/trisha-patil05/HeatTreat-Pizza.git
 cd HeatTreat-Pizza
 ```
 
-### 2. Setup Backend
+### 2. Backend Setup
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file inside `backend/`:
+Create `.env` in `backend/`:
 ```env
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
 PORT=5000
 ```
 
-Run the backend:
 ```bash
 node server.js
+# ✅ MongoDB Connected
+# ✅ Server running on port 5000
 ```
 
-### 3. Setup Frontend
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm start
-```
-
-Create `.env` in `frontend/`:
-```env
-REACT_APP_API_URL=http://localhost:5000/api
 ```
 
 ---
@@ -178,35 +161,34 @@ REACT_APP_API_URL=http://localhost:5000/api
 
 | Variable | Description |
 |---|---|
-| `MONGO_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret key for JWT |
-| `PORT` | Backend port (default: 5000) |
-| `REACT_APP_API_URL` | Backend API URL |
+| `MONGO_URI` | MongoDB Atlas connection string |
+| `JWT_SECRET` | Secret key for JWT tokens |
+| `PORT` | Backend server port (default: 5000) |
+| `REACT_APP_API_URL` | Backend API URL for production |
 
 ---
 
-## 🌐 Live Demo
+## 🌐 Deployment
 
-| Service | URL |
-|---|---|
-| Frontend | https://heat-treat-pizza.vercel.app/ |
-| Backend | https://heattreat-backend.onrender.com |
-
----
-
-## 📸 Screenshots
-
-> Add screenshots here
+| Service | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | [heat-treat-pizza.vercel.app](https://heat-treat-pizza.vercel.app) |
+| Backend | Render | [heattreat-backend.onrender.com](https://heattreat-backend.onrender.com) |
+| Database | MongoDB Atlas | Cloud hosted |
 
 ---
 
 ## 🔑 Admin Access
 
 To make a user admin, update their role in MongoDB Atlas:
-```json
-{ "role": "admin" }
+```
+HeatTreatPizzaDB → users collection → Edit document → role: "admin"
 ```
 Then logout and login again — ⚙️ Admin link will appear in Navbar.
+
+**Promo Codes:**
+- `HEAT10` → 10% discount
+- `PIZZA20` → 20% discount
 
 ---
 
@@ -220,24 +202,23 @@ Then logout and login again — ⚙️ Admin link will appear in Navbar.
 
 ---
 
-## 🧠 Key Learning Outcomes
+## 🧠 Key Learnings
 
-- Built a production-ready full-stack app using MERN stack
+- Built production-ready full-stack app using MERN stack
 - Implemented JWT authentication with role-based access control
-- Designed RESTful APIs with proper error handling
 - Integrated Nodemailer for transactional emails
-- Built admin analytics dashboard with pure CSS charts
-- Managed global state using React Context API
-- Implemented real-world features: OTP, toast notifications, animations
+- Built admin analytics dashboard
+- Managed state using localStorage (no Redux)
+- Implemented OTP-based forgot password flow
+- Deployed backend on Render, frontend on Vercel
 
 ---
 
 ## 👩‍💻 Author
 
 **Trisha Patil**
-GitHub: [github.com/trisha-patil05](https://github.com/trisha-patil05)
-
-LinkedIn: [linkedin.com/in/trisha-patil05](https://www.linkedin.com/in/trisha-patil05/)
+- GitHub: [github.com/trisha-patil05](https://github.com/trisha-patil05)
+- LinkedIn: [linkedin.com/in/trisha-patil05](https://www.linkedin.com/in/trisha-patil05/)
 
 ---
 
